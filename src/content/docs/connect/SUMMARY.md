@@ -1,0 +1,15 @@
+# Table of contents
+
+* [Connect your AI](README.md)
+* [clients](clients/README.md)
+  * [ChatGPT](clients/chatgpt.md)
+  * [Claude Code](clients/claude-code.md)
+  * [Claude](clients/claude.md)
+  * [Codex](clients/codex.md)
+  * [Cursor](clients/cursor.md)
+  * [Grok](clients/grok.md)
+  * [Kimi Code](clients/kimi-code.md)
+  * [Any MCP client](clients/membase-mcp.md)
+* [manage-access](manage-access/README.md)
+  * [Access control](manage-access/access-control.md)
+  * [Troubleshooting](manage-access/troubleshooting.md)
