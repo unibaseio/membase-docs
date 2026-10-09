@@ -1,11 +1,13 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 
 export default defineConfig({
-  site: 'https://docs.membase.io',
+  site: 'https://docs.membase.ai',
   integrations: [
     starlight({
       title: 'Membase Docs',
+      plugins: [starlightLlmsTxt()], // /llms.txt, /llms-full.txt for AI readers
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/unibaseio/membase-ai' }],
       sidebar: [
   {
