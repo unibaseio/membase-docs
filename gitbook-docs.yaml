@@ -1,0 +1,50 @@
+# GitBook Site Git Sync configuration.
+#
+# Content lives under src/content/docs/ because this repository is an Astro
+# Starlight site. Each space below maps to one of the four self-contained
+# directories there; the titles are the group labels this site already uses in
+# its own sidebar (astro.config.mjs), not new ones.
+#
+# Two parts of that sidebar are deliberately absent, because neither maps onto
+# a directory:
+#   - "Overview" is index.mdx, concepts.md, faq.md and whats-new.md, which sit
+#     directly in src/content/docs/. That path is the parent of every directory
+#     below, so a space pointing at it would pull in all four spaces again.
+#   - "Resources" is three external links, which the schema only permits inside
+#     a section-based structure.
+# Both are listed in the handover rather than worked around by moving files.
+
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+version: 1
+
+site:
+  title: Membase Docs
+  structure:
+    - type: space
+      key: space-use
+      title: Use Membase
+      path: use
+      default: true
+      content:
+        directory: ./src/content/docs/use
+
+    - type: space
+      key: space-connect
+      title: Connect your AI
+      path: connect
+      content:
+        directory: ./src/content/docs/connect
+
+    - type: space
+      key: space-build
+      title: Build with Membase
+      path: build
+      content:
+        directory: ./src/content/docs/build
+
+    - type: space
+      key: space-evaluation
+      title: Evaluation
+      path: evaluation
+      content:
+        directory: ./src/content/docs/evaluation
