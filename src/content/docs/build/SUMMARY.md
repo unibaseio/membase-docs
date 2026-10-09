@@ -1,0 +1,17 @@
+# Table of contents
+
+* [Build with Membase](README.md)
+* [concepts](concepts/README.md)
+  * [How Membase works](concepts/how-membase-works.md)
+  * [Platform overview](concepts/platform-overview.md)
+* [guides](guides/README.md)
+  * [Memory operations](guides/memory-operations.md)
+  * [Multi-user isolation](guides/multi-user-isolation.md)
+* [integrations](integrations/README.md)
+  * [AI coding assistants](integrations/ai-coding-tools.md)
+  * [MCP frameworks](integrations/mcp-frameworks.md)
+  * [OpenAI API](integrations/openai-api.md)
+* [reference](reference/README.md)
+  * [Agent protocol — API reference](reference/api-reference.md)
+  * [Authentication & Scopes](reference/authentication.md)
+  * [API troubleshooting](reference/troubleshooting.md)
