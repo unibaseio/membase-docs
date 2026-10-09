@@ -1,23 +1,73 @@
 ---
 title: "FAQ"
+description: "Answers about memories, connected apps, models, exports and deleting data."
 ---
 
-## SDK vs MCP vs Skill?
+Answers about memories, connected apps, models, exports and deleting data.
 
-* **SDK** — Direct Python integration for custom agents.
-* **MCP** — Install the `.mcpb` bundle in MCP-compatible clients (e.g. Claude Desktop, Cline).
-* **Skill** — Use as a skill in frameworks like BitAgent.
+## What is a Memory?
 
-See [Integration Options](/integration-options/).
+A Memory organizes information about a topic, such as project decisions, reading notes or
+customers. Choose its sources, describe what it should retain, and update it manually or on a
+schedule. You control which apps and keys can access it.
+[Concepts](/concepts/).
 
-## Where is my data stored?
+## I added a folder. Why does my AI not know about it yet?
 
-Raw memory lives on the [Membase Hub](https://hub.membase.unibase.com), encrypted on your machine under your Domain key before upload — the Hub only ever sees ciphertext. Recall memory (observations + retrieval index) stays on the agent's own machine. For verifiable long-term durability you can opt into the [Unibase DA storage backend](/storage-backends/) (testnet).
+Adding a source makes its content available for processing. Select **Update now** on the
+Memory page, or wait for its scheduled update, to learn from that content. Check the run's
+**Report** if the update fails. [Bring your material in](/use/bring-your-material-in/bring-material-in/).
 
-## Which chains does Membase work on?
+## Why can the first search take longer?
 
-Identity is **chain-agnostic** — the same wallet and signatures work on Base, BSC, or any EVM chain (see [Wallet & Identity](/identity/)). Only on-chain [Settlement](/settlement/) is per-chain, set by deployment configuration.
+A search after a period of inactivity may take longer to start. Search also uses a model to
+find relevant information. If the request fails, check the model configuration and the error
+before assuming the Memory is empty. [Search behavior](/build/concepts/how-membase-works/#a-search-is-a-turn).
 
-## Do I need Membase for AIP?
+## Where can I manage and export my data?
 
-No — Membase memory is optional; [AIP](https://docs.unibase.com/aip/) agents communicate and settle without it. Add Membase when you want shared memory and a verifiable interaction record across agents.
+Manage your material in **Files**, review learned content in **Memory**, and choose which apps
+can access it in **Connect**. Download an export from **Settings › Data & export**. If the
+export warning says agent memory files are missing, export again before relying on it as a
+backup. [Export and deletion](/use/account-and-models/settings/).
+
+## What can a connected app do?
+
+An app authorized through the MCP consent screen can read the Memories you select. Profile
+access is a separate choice. For an integration that needs to add or remove content, create
+a developer key with the appropriate access level. [Access control](/connect/manage-access/access-control/).
+
+## How do I stop an app accessing my memory?
+
+Switch off a Memory under **Use in**, or use **Disconnect…** on the app's page in **Connect**
+to revoke its approvals. These changes apply to subsequent requests. They do not remove
+content the external app has already received. Removing a connector only inside that app
+does not revoke its Membase authorization.
+
+## Which model does it use? Do I need my own key?
+
+Use **AI Setup** to connect a supported provider key or subscription. A free account includes
+an initial allowance of chat turns. When that allowance is used, stored memories remain;
+continuing to run the assistant requires an available model source or a suitable plan.
+[AI Setup](/use/account-and-models/ai-setup/).
+
+## What is the profile?
+
+The profile contains information about you, such as preferences and recent context. You can
+grant access to it separately from access to individual Memories.
+
+## What cannot be undone?
+
+Deleting a Memory removes its stored content. Deleting a conversation removes its transcript;
+information already saved to memory is retained. **Delete everything** in Settings removes
+account data while retaining your sign-in identity. Review each confirmation and download
+any data you want to keep before proceeding. [Deletion and access controls](/concepts/#stopping-and-undoing).
+
+## How is this different from searching my files?
+
+A Memory processes source material and retains information for later retrieval. Updating a
+source and updating its Memory are separate actions. See the [memory engine benchmarks](/evaluation/benchmarks/)
+for evaluation results and their scope; those measurements are separate from hosted API performance.
+
+Questions about API status codes, metadata filters or serving multiple users are covered in
+[API troubleshooting](/build/reference/troubleshooting/).

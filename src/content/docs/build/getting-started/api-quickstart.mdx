@@ -1,0 +1,206 @@
+---
+title: "API quickstart"
+description: "Use Python, TypeScript or curl to add a document, wait until the Memory has learned it, and search the result."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Use Python, TypeScript or curl to add a document, wait until the Memory has learned it, and search the result.
+
+This walkthrough adds one note to a Memory, waits for learning to finish, and searches for
+what it said. Choose Python, TypeScript or curl; each follows the same sequence.
+
+You need a Membase account, a Memory you can write to, and a working model with available
+turns. Create a Memory in the [app quickstart](/use/getting-started/quickstart/)
+and check [AI Setup](/use/account-and-models/ai-setup/) if a run cannot use a model.
+
+## 1. Create a key
+
+In the app, open **Connect › Skills › Manage keys › Create key**. Name the key, choose
+**Read & write**, and select exactly one Memory under **Memory access** for this walkthrough.
+Choose an expiry and create the key. Copy the token while it is shown; it is shown only once.
+The profile permission is optional and is not needed for this example.
+
+```bash
+export MEMBASE_API_KEY="mbk_…"
+```
+
+The [key guide](/use/manage-your-memory/connect/#developer-keys) explains rotation and
+revocation. The examples call `https://api.app.membase.io`.
+
+## 2. Add, wait, then search
+
+`add` returns `202` when material is accepted; it does not promise that learning has finished.
+Check `documents.get(id).learned` before searching for the new content. The examples stop
+on a failed learning run and have a polling limit, so they cannot wait indefinitely.
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+Install with `pip install membase-sdk`, save this as `quickstart.py`, and run
+`python quickstart.py` in the shell where you exported the key.
+
+```python
+import time
+from membase import Membase
+
+client = Membase()
+containers = client.containers.list()["containers"]
+if len(containers) != 1:
+    raise RuntimeError("For this example, select exactly one Memory on the key's Reach page.")
+container = containers[0]["id"]
+custom_id = "quickstart-ledger-v1"
+
+added = client.add(
+    "We chose Postgres for the Lumen ledger.",
+    container=container,
+    title="Lumen decision",
+    custom_id=custom_id,
+)
+document_id = added.get("document_id")
+if not document_id:
+    raise RuntimeError(f"Accepted at {added.get('path')}, but the document id is pending. See API troubleshooting.")
+
+for _ in range(60):
+    document = client.documents.get(document_id)
+    if document.get("learned"):
+        break
+    status = (document.get("learning_run") or {}).get("status")
+    if status in {"failed", "canceled"}:
+        raise RuntimeError("Learning stopped. Open the Memory's Report in the app.")
+    time.sleep(5)
+else:
+    raise TimeoutError("Still unread. Check the Memory's Report and model settings before retrying.")
+
+found = client.search("Which database did we choose for the Lumen ledger?", container=container)
+errors = [c for c in found["containers"] if c.get("error")]
+if errors:
+    raise RuntimeError(f"Some Memories could not answer: {errors}")
+for hit in found["results"]:
+    print(hit["container_name"], "·", hit["content"])
+if not found["results"]:
+    print("No matching passages. Inspect the Memory and its latest Report in the app.")
+```
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+Install with `npm install membase-sdk` and run this in a server-side TypeScript project
+(Node 18 or newer). Keep the key on the server, outside browser bundles.
+
+```ts
+import { Membase } from "membase-sdk";
+
+const client = new Membase();
+const { containers } = await client.containers.list();
+if (containers.length !== 1) {
+  throw new Error("For this example, select exactly one Memory on the key's Reach page.");
+}
+const container = containers[0].id;
+const customId = "quickstart-ledger-v1";
+const added = await client.add({
+  content: "We chose Postgres for the Lumen ledger.",
+  container, title: "Lumen decision", customId,
+});
+const documentId = added.document_id;
+if (!documentId) throw new Error(`Accepted at ${added.path}; document id pending. See API troubleshooting.`);
+let learned = false;
+
+for (let attempt = 0; attempt < 60; attempt++) {
+  const document = await client.documents.get(documentId);
+  if (document.learned) { learned = true; break; }
+  const run = document.learning_run as { status?: string } | undefined;
+  if (run?.status === "failed" || run?.status === "canceled") {
+    throw new Error("Learning stopped. Open the Memory's Report in the app.");
+  }
+  await new Promise(resolve => setTimeout(resolve, 5000));
+}
+if (!learned) throw new Error("Still unread. Check the Memory's Report and model settings.");
+
+const found = await client.search({ q: "Which database did we choose for the Lumen ledger?", container });
+const errors = found.containers.filter(c => c.error);
+if (errors.length) throw new Error(JSON.stringify(errors));
+for (const hit of found.results) console.log(hit.container_name, "·", hit.content);
+if (!found.results.length) console.log("No matching passages. Inspect the Memory and its Report.");
+```
+
+</TabItem>
+
+
+
+<TabItem label="curl">
+
+Requires Bash, curl and `jq`. Save this as `quickstart.sh` and run `bash quickstart.sh` in the
+shell where you exported the key. A failed HTTP request stops the script.
+
+```bash
+set -euo pipefail
+BASE=https://api.app.membase.io
+AUTH="Authorization: Bearer $MEMBASE_API_KEY"
+containers=$(curl --fail-with-body -sS "$BASE/v1/containers" -H "$AUTH")
+container=$(jq -er '.containers | if length == 1 then .[0].id else error("Select exactly one Memory on the key") end' <<< "$containers")
+custom_id=quickstart-ledger-v1
+payload=$(jq -n --arg container "$container" --arg id "$custom_id" \
+  '{container: $container, content: "We chose Postgres for the Lumen ledger.", title: "Lumen decision", custom_id: $id}')
+added=$(curl --fail-with-body -sS "$BASE/v1/documents" -H "$AUTH" \
+  -H 'Content-Type: application/json' -d "$payload")
+document_id=$(jq -r '.document_id // empty' <<< "$added")
+if [ -z "$document_id" ]; then
+  echo "Accepted, but document id pending. See API troubleshooting." >&2
+  exit 1
+fi
+learned=false
+
+for ((attempt=0; attempt<60; attempt++)); do
+  if [ -n "$document_id" ]; then
+    document=$(curl --fail-with-body -sS "$BASE/v1/documents/$document_id" -H "$AUTH")
+    if jq -e '.learned == true' <<< "$document" >/dev/null; then
+      learned=true
+      break
+    fi
+    if jq -e '.learning_run.status == "failed" or .learning_run.status == "canceled"' <<< "$document" >/dev/null; then
+      echo "Learning stopped. Open the Memory's Report in the app." >&2
+      exit 1
+    fi
+  fi
+  sleep 5
+done
+if [ "$learned" != true ]; then
+  echo "Still unread. Check the Memory's Report and model settings." >&2
+  exit 1
+fi
+payload=$(jq -n --arg container "$container" \
+  '{container: $container, q: "Which database did we choose for the Lumen ledger?"}')
+found=$(curl --fail-with-body -sS "$BASE/v1/search" -H "$AUTH" \
+  -H 'Content-Type: application/json' -d "$payload")
+jq -e 'if any(.containers[]; .error) then error("A Memory could not answer; inspect containers[].error") else . end' <<< "$found"
+```
+
+</TabItem>
+
+
+</Tabs>
+
+
+## 3. Check the result
+
+Expect a passage naming Postgres and the Memory it came from. The exact wording can vary.
+An empty `results` list is not enough to diagnose a problem: inspect `containers[].error`
+first, then the Memory's learned content and latest **Report**.
+
+Re-running this example with the same `custom_id` does not add a second copy. If learning was
+deferred or failed, fix the cause and run **Update now** in the app; resending the same document
+is not a way to force another learning run. See [API troubleshooting](/build/reference/troubleshooting/).
+
+## Next steps
+
+- [Memory operations](/build/guides/memory-operations/): facts, profile, documents, search and deletion.
+- [SDKs](/build/reference/sdk-quickstart/): configuration, errors and method signatures.
+- [Authentication](/build/reference/authentication/): permissions, reach and expiry.
+- [Integrations](/build/#integrations): put these calls behind your model or framework.

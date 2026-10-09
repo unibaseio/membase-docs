@@ -1,0 +1,307 @@
+---
+title: "SDKs"
+description: "The Python and TypeScript clients. One client, one key, your memory."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Python and TypeScript clients. One client, one key, your memory.
+
+For your first working example, follow the [quickstart](/build/getting-started/api-quickstart/). This page is
+client reference: installation, configuration, methods and errors.
+
+The SDK is a thin client over the Membase API. Every method is one operation of the
+[API reference](/build/reference/api-reference/), and the access level, reach and confirmation rules are
+enforced server-side, so the SDK cannot do anything the key cannot.
+
+## Install
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+```bash
+pip install membase-sdk
+```
+
+Python 3.10 or newer. One dependency, `httpx`.
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+```bash
+npm install membase-sdk
+```
+
+Node 18 or newer (global `fetch`), Deno or Bun. Zero dependencies; responses are typed.
+
+</TabItem>
+
+
+</Tabs>
+
+
+## Who owns the memory
+
+In Membase **the person owns the memory**, not the app. A developer key is minted by the
+account's owner under **Connect › Developer keys**, and it carries what they chose: an access
+level, the Memories it may reach, whether it may read their profile, and when it expires. The
+SDK takes that key and nothing else.
+
+If you have used a memory API where you tag content with a *container tag* per end user and
+one master key reaches them all: that is not this. A Membase **container** is one of the
+person's own Memories (a topic), not a tenant. A product that serves many people gives each of
+them their own Membase account, and reaches their memory with their own key or their own
+consent. See [Multi-user Isolation](/build/guides/multi-user-isolation/).
+
+## Create a client
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+```python
+from membase import Membase
+
+client = Membase()                              # MEMBASE_API_KEY from the environment
+client = Membase(api_key="mbk_…")               # or explicit
+client = Membase(base_url="http://localhost:8080")   # a self-hosted Membase
+```
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+```ts
+import { Membase } from "membase-sdk";
+
+const client = new Membase();                                    // MEMBASE_API_KEY from the environment
+const explicit = new Membase({ apiKey: "mbk_…" });               // or explicit
+const local = new Membase({ baseUrl: "http://localhost:8080" }); // a self-hosted Membase
+```
+
+</TabItem>
+
+
+</Tabs>
+
+
+| Setting | Python | TypeScript | Default |
+|---|---|---|---|
+| Request timeout | `timeout` (seconds) | `timeoutMs` (milliseconds) | 90 seconds |
+| Retry limit | `max_retries` | `maxRetries` | 2 |
+| API origin | `base_url` | `baseUrl` | `https://api.app.membase.io` |
+
+Retries cover connection errors, timeouts, 408, 409, 429 and 5xx, with exponential backoff;
+a numeric `Retry-After` is honoured when present (the server sends none today).
+A cold runtime can take longer than the default timeout. See [API troubleshooting](/build/reference/troubleshooting/).
+The method snippets below are independent examples; follow the quickstart to wait for an
+accepted document to become searchable.
+
+## The four verbs
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+```python
+# add: a document (its text, or a public url) into a Memory. Returns at once, learned in the background.
+doc = client.add("Call notes with Acme: they want SSO before the pilot.",
+                 container="mv-…", title="Call with Acme", custom_id="call-2026-09-24")
+doc["status"]                                   # "queued"; the same custom_id again answers "exists" and starts nothing
+
+# search: passages across every Memory in reach, most relevant first, each naming its container
+hits = client.search("what does Acme need before the pilot", limit=5)
+for h in hits["results"]:
+    print(h["container_name"], "·", h["content"])
+
+# profile: who the user is (needs the profile tick on the key)
+p = client.profile(q="working hours")
+p["static"], p["dynamic"], p["results"]
+
+# ask: the exposed agent's answer (an agent-endpoint credential, e.g. a marketplace subscription)
+client.ask("Summarise what the seller learned about Postgres RLS.")
+```
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+```ts
+const doc = await client.add({ container: "mv-…", content: "Call notes with Acme: they want SSO before the pilot.",
+                               title: "Call with Acme", customId: "call-2026-09-24" });
+doc.status;                                      // "queued"; "exists" when the customId was seen before
+
+const hits = await client.search({ q: "what does Acme need before the pilot", limit: 5 });
+for (const h of hits.results) console.log(h.container_name, "·", h.content);
+
+const p = await client.profile({ q: "working hours" });
+p.static; p.dynamic; p.results;
+
+await client.ask({ message: "Summarise what the seller learned about Postgres RLS." });
+```
+
+</TabItem>
+
+
+</Tabs>
+
+
+`add` hands raw material to the Memory's folder and starts its learning turn; poll
+`documents.get(id)` until `learned` is true if you need to know. `search` is retrieval, not an
+answer; `ask` is the answer. What each verb does inside the account, and what code sees when
+the person does something in the app, is on [Memory operations](/build/guides/memory-operations/).
+
+## The resources
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+```python
+client.containers.list()                        # {"containers": [{id, name, description, …}]}
+
+client.documents.list(container="mv-…")        # newest first; get(id) supplies "learned"
+client.documents.get("srcitem_…")
+client.documents.delete("srcitem_…", confirm=True)
+
+client.memories.add("We settled on Postgres.", container="mv-…")   # a note the Memory reads
+client.memories.add("The user prefers dark mode.", static=True)     # a standing fact → the profile
+client.memories.forget("12", container="mv-…", confirm=True)
+
+client.rules()                                  # the user's standing rules for this credential
+```
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+```ts
+await client.containers.list();
+
+await client.documents.list({ container: "mv-…" });
+await client.documents.get("srcitem_…");
+await client.documents.delete("srcitem_…", { confirm: true });
+
+await client.memories.add({ content: "We settled on Postgres.", container: "mv-…" });
+await client.memories.add({ content: "The user prefers dark mode.", static: true });
+await client.memories.forget("12", { container: "mv-…", confirm: true });
+
+await client.rules();
+```
+
+</TabItem>
+
+
+</Tabs>
+
+
+`delete` and `forget` need a key at **Full access**. Without `confirm` they do not fail: the
+answer is `status: confirmation_required` with a `how` sentence to relay to the person. Pass
+`confirm` only after they agreed; from a developer key that counts as the owner's confirmation.
+
+## Errors
+
+One class per HTTP status, all carrying the API's error envelope: `code` (which rule refused),
+`message`, `details`, `retryable` and `trace_id` (quote it when reporting a problem).
+
+| Status | Class | When |
+|---|---|---|
+| 400 | `BadRequestError` | `code: validation`, from the service's own checks: an empty `q`, both or neither of `content` and `url`, `container` omitted when more than one is in reach |
+| 401 | `AuthenticationError` | no bearer at all |
+| 403 | `PermissionDeniedError` | `code: unauthorized`: an unknown, expired or revoked key; a container outside the key's reach; a verb above its level |
+| 404 | `NotFoundError` | an unknown document or memory id |
+| 409 | `ConflictError` | a conflicting write; retried automatically, then raised |
+| 422 | `UnprocessableEntityError` | `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Also `code: validation` for a malformed body (a missing or mistyped required field), so read `code`, not only the status |
+| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`) or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. `search` does not raise it and `add` never does |
+| 5xx | `InternalServerError` | retried automatically, then raised |
+| — | `APIConnectionError`, `APITimeoutError` | the request never got an answer |
+
+
+<Tabs syncKey="lang">
+
+
+<TabItem label="Python">
+
+```python
+from membase import PermissionDeniedError, RateLimitError
+
+try:
+    client.search("x", container="mv-other")
+except PermissionDeniedError as e:
+    print(e.code, e.message, e.trace_id)       # unauthorized  may not use that container  …
+```
+
+</TabItem>
+
+
+
+<TabItem label="TypeScript">
+
+```ts
+import { PermissionDeniedError } from "membase-sdk";
+
+try {
+  await client.search({ q: "x", container: "mv-other" });
+} catch (e) {
+  if (e instanceof PermissionDeniedError) console.log(e.code, e.message, e.traceId);
+}
+```
+
+</TabItem>
+
+
+</Tabs>
+
+
+## Rules of the road
+
+* **Reach is account state.** The Memories a key may use are switched on the Connect page. A key narrowed there answers `403` on its very next call, with the same token.
+* **Confirm means the person agreed.** Never pass `confirm` on your own initiative.
+* **Writes are raw material.** `add` hands bytes to the Memory's folder; its agent reads them in the next learning turn.
+* **Do not store to filter later.** There are no server-side metadata filters on search; put what matters in the content, and use `custom_id` and `metadata` for your own bookkeeping.
+* **The token stays out of logs.** Log the key's hint (`mbk_7f3a92d1…`) from the key's page, never the token.
+
+## Method map
+
+| SDK | REST | Protocol tool | Level |
+|---|---|---|---|
+| `add(...)` | `POST /v1/documents` | `add_document` | Read & write |
+| `search(q, ...)` | `POST /v1/search` | `search_memories` | Read |
+| `profile(q=…)` | `GET /v1/profile` | `get_profile` | Read + profile tick |
+| `ask(message)` | `POST /v1/ask` | `ask_agent` | agent exposure |
+| `rules()` | `GET /v1/rules` | `memory_rules` | Read |
+| `containers.list()` | `GET /v1/containers` | `list_containers` | Read |
+| `documents.list(container=…)` | `GET /v1/documents` | `list_documents` | Read |
+| `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` (REST only, not an MCP tool) | Read |
+| `documents.delete(id, confirm=True)` | `DELETE /v1/documents/{id}` | `delete_document` | Full access |
+| `memories.add(content, container=…, static=…)` | `POST /v1/memories` | `add_memory` | Read & write |
+| `memories.forget(id, container=…, confirm=True)` | `DELETE /v1/memories/{id}` | `forget_memory` | Full access |
+
+The MCP server offers the same operations under the protocol tool names, so a model that
+learned `search_memories` in Claude is calling what your code calls `search`.
+
+## Without the SDK
+
+Any HTTP client works, and the OpenAPI document generates a typed client in any language:
+
+```bash
+npx openapi-typescript https://www.app.membase.io/plugin/openapi/agent-protocol.json -o membase.d.ts
+```
