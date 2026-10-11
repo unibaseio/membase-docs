@@ -4,7 +4,8 @@ Source for **[docs.membase.ai](https://docs.membase.ai)** — built with [Starli
 
 Pages live in `src/content/docs/`; the sidebar is defined in `astro.config.mjs`.
 
-This repo is the source of truth for the Membase docs — edit pages here. Images are in
+This repo is the source of truth for the Membase docs — edit pages here. **Read [CLAUDE.md](CLAUDE.md)
+first** — the site is Starlight, not GitBook, and `npm run check` enforces the format. Images are in
 `public/images/`. (Content was first imported from `membase-suites` `docs/developer` +
 `docs/user-guide`, which also fed the former GitBook; page URLs match that GitBook.)
 

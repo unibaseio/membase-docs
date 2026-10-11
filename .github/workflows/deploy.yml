@@ -5,6 +5,7 @@ name: Deploy docs
 on:
   push:
     branches: [main]
+  pull_request: # check + build only; deploy runs on main
   workflow_dispatch:
 
 permissions:
@@ -13,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }} # PR checks never cancel a main deploy
   cancel-in-progress: true
 
 jobs:
@@ -21,11 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - run: node scripts/check-docs.mjs # Starlight format rules — see CLAUDE.md
       - uses: withastro/action@v6
         with:
           node-version: 22
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
