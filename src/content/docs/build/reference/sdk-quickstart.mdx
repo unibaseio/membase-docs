@@ -23,7 +23,7 @@ enforced server-side, so the SDK cannot do anything the key cannot.
 <TabItem label="Python">
 
 ```bash
-pip install membase-sdk
+pip install unibaseio-membase
 ```
 
 Python 3.10 or newer. One dependency, `httpx`.
@@ -35,7 +35,7 @@ Python 3.10 or newer. One dependency, `httpx`.
 <TabItem label="TypeScript">
 
 ```bash
-npm install membase-sdk
+npm install @unibaseio/membase
 ```
 
 Node 18 or newer (global `fetch`), Deno or Bun. Zero dependencies; responses are typed.
@@ -82,7 +82,7 @@ client = Membase(base_url="http://localhost:8080")   # a self-hosted Membase
 <TabItem label="TypeScript">
 
 ```ts
-import { Membase } from "membase-sdk";
+import { Membase } from "@unibaseio/membase";
 
 const client = new Membase();                                    // MEMBASE_API_KEY from the environment
 const explicit = new Membase({ apiKey: "mbk_…" });               // or explicit
@@ -256,7 +256,7 @@ except PermissionDeniedError as e:
 <TabItem label="TypeScript">
 
 ```ts
-import { PermissionDeniedError } from "membase-sdk";
+import { PermissionDeniedError } from "@unibaseio/membase";
 
 try {
   await client.search({ q: "x", container: "mv-other" });

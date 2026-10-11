@@ -40,7 +40,7 @@ on a failed learning run and have a polling limit, so they cannot wait indefinit
 
 <TabItem label="Python">
 
-Install with `pip install membase-sdk`, save this as `quickstart.py`, and run
+Install with `pip install unibaseio-membase`, save this as `quickstart.py`, and run
 `python quickstart.py` in the shell where you exported the key.
 
 ```python
@@ -91,11 +91,11 @@ if not found["results"]:
 
 <TabItem label="TypeScript">
 
-Install with `npm install membase-sdk` and run this in a server-side TypeScript project
+Install with `npm install @unibaseio/membase` and run this in a server-side TypeScript project
 (Node 18 or newer). Keep the key on the server, outside browser bundles.
 
 ```ts
-import { Membase } from "membase-sdk";
+import { Membase } from "@unibaseio/membase";
 
 const client = new Membase();
 const { containers } = await client.containers.list();

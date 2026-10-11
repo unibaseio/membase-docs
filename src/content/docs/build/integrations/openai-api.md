@@ -18,7 +18,7 @@ Declare the two verbs as functions and call the SDK when the model asks. The sha
 
 ```ts
 import OpenAI from "openai";
-import { Membase } from "membase-sdk";
+import { Membase } from "@unibaseio/membase";
 
 const memory = new Membase();
 const openai = new OpenAI();
