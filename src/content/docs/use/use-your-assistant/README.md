@@ -1,2 +1,0 @@
-# use-your-assistant
-

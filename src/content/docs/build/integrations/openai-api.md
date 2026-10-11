@@ -1,20 +1,21 @@
 ---
-title: OpenAI API
-description: >-
-  The user's memory behind the OpenAI API or any function-calling model: declare
-  search_memories and add_memory as functions and call the SDK when the model
-  asks.
+title: "OpenAI API"
+description: "The user's memory behind the OpenAI API or any function-calling model: declare search_memories and add_memory as functions and call the SDK when the model asks."
 ---
 
-# OpenAI API
+The user's memory behind the OpenAI API or any function-calling model: declare search_memories and add_memory as functions and call the SDK when the model asks.
 
-The user's memory behind the OpenAI API or any function-calling model: declare search\_memories and add\_memory as functions and call the SDK when the model asks.
+Everything below assumes `MEMBASE_API_KEY` in the environment, minted at **Read & write**
+with **Your profile** ticked ([Authentication & Scopes](/build/reference/authentication/)), and your model
+provider's key beside it. The loop is the same in every harness:
 
-Everything below assumes `MEMBASE_API_KEY` in the environment, minted at **Read & write** with **Your profile** ticked ([Authentication & Scopes](../../../../../build/reference/authentication/)), and your model provider's key beside it. The loop is the same in every harness:
+![Read the profile once, search per question, answer citing the container, then save what the person supplied so the next search finds it](/images/figures/core-loop.svg)
 
-### The tool-calling loop
+## The tool-calling loop
 
-Declare the two verbs as functions and call the SDK when the model asks. The shape is the Chat Completions tool-calling loop; any provider with the same loop takes the same two definitions.
+Declare the two verbs as functions and call the SDK when the model asks. The shape is the
+Chat Completions tool-calling loop; any provider with the same loop takes the same two
+definitions.
 
 ```ts
 import OpenAI from "openai";
@@ -62,9 +63,11 @@ for (;;) {
 }
 ```
 
-The same loop in Python is the SDK's `client.search(...)` and `client.memories.add(...)` behind two function definitions; nothing else changes.
+The same loop in Python is the SDK's `client.search(...)` and `client.memories.add(...)`
+behind two function definitions; nothing else changes.
 
-### Rules that hold in every shape
+
+## Rules that hold in every shape
 
 * **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
 * **Cite the container.** Every hit names `container_name`; say where an answer came from.
@@ -73,4 +76,4 @@ The same loop in Python is the SDK's `client.search(...)` and `client.memories.a
 * **Treat `403` as withdrawn access.** The owner narrowed or revoked the key; do not retry with it.
 * **Expect the first search to be slow.** Up to a minute after a quiet spell; keep the SDK's timeout.
 
-The same rules, with the reasons, are on [Memory operations](../../../../../build/guides/memory-operations/#rules-of-the-road).
+The same rules, with the reasons, are on [Memory operations](/build/guides/memory-operations/#rules-of-the-road).

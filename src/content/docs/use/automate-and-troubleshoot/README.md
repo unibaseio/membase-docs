@@ -1,2 +1,0 @@
-# automate-and-troubleshoot
-
