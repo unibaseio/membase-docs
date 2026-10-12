@@ -7,6 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Membase Docs',
+      favicon: '/favicon.ico', // same icon as membase.ai
       plugins: [starlightLlmsTxt()], // /llms.txt, /llms-full.txt for AI readers
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/unibaseio/membase-ai' }],
       sidebar: [
