@@ -5,7 +5,7 @@ in one JSON file OUTSIDE the repo (default ~/.membase-docs-demo.json, override w
 MEMBASE_DOCS_DEMO). Run this when the session has expired (two weeks) or to mint a fresh
 account; then `seed_demo.py` to populate it and `capture.py --base-url … --session …` to shoot.
 
-    python3 docs/user-guide/shots/login_demo.py [--base-url https://www.app.membase.io] [--new]
+    python3 docs/user-guide/shots/login_demo.py [--base-url https://app.membase.ai] [--new]
 """
 
 from __future__ import annotations
@@ -80,7 +80,7 @@ def refresh_if_expired(path: str, session: dict) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
-        "--base-url", default="https://www.app.membase.io", help="the SPA origin (it proxies /v1)"
+        "--base-url", default="https://app.membase.ai", help="the SPA origin (it proxies /v1)"
     )
     ap.add_argument(
         "--new",

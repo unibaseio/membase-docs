@@ -7,7 +7,7 @@ Run from the repo root (build the SPA first: `cd apps/product-web && npm run bui
 Against a real deployment (the demo account, populated by the seed script — see CONTRIBUTING.md):
 
     PYTHONPATH=src:packages:. python3 docs/user-guide/shots/capture.py \
-        --base-url https://www.app.membase.io --session ~/.membase-docs-demo.json --view "Lumen project"
+        --base-url https://app.membase.ai --session ~/.membase-docs-demo.json --view "Lumen project"
 
 Each shot is declared once in SHOTS: a route, what to wait for, optional clicks, and the
 controls to call out. Callouts are anchored on the product's own `data-testid`s (or a text

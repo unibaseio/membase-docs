@@ -44,7 +44,7 @@ a key created from the **Skills** tab shows only the sentence below.
 Or the skill alone, with no MCP server at all. Paste the sentence from Connect's **Skills**
 tab:
 
-> Install Membase from https://www.app.membase.io/skill using key mbk_…
+> Install Membase from https://app.membase.ai/skill using key mbk_…
 
 Claude Code fetches the skill folder into `~/.claude/skills/membase/`, stores the key as
 `MEMBASE_API_KEY` in the `env` block of `~/.claude/settings.json`, checks it with one call

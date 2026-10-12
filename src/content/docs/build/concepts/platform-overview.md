@@ -1,11 +1,11 @@
 ---
 title: "Platform overview"
-description: "The hosted Membase at app.membase.io as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone."
+description: "The hosted Membase at app.membase.ai as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone."
 ---
 
-The hosted Membase at app.membase.io as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone.
+The hosted Membase at app.membase.ai as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone.
 
-The Memory Platform is the hosted Membase at `https://www.app.membase.io`. A person hands it
+The Memory Platform is the hosted Membase at `https://app.membase.ai`. A person hands it
 material once; it keeps a living memory of that material; every AI they connect, and every
 key they mint, reads the same memory. The mechanism is on
 [How Membase works](/build/concepts/how-membase-works/); this page is the product around it, written for

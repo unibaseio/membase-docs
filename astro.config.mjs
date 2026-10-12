@@ -312,7 +312,7 @@ export default defineConfig({
     "items": [
       {
         "label": "Open Membase",
-        "link": "https://www.app.membase.io"
+        "link": "https://app.membase.ai"
       },
       {
         "label": "membase-ai on GitHub",

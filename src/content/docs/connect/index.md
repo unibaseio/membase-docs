@@ -41,7 +41,7 @@ key in an Authorization header, with the permissions of that key.
 
 Tell the AI:
 
-> Install Membase from https://www.app.membase.io/skill using key mbk_…
+> Install Membase from https://app.membase.ai/skill using key mbk_…
 
 That address is the skill's `SKILL.md` with an install preamble. The AI fetches the folder,
 keeps the key as `MEMBASE_API_KEY` and calls the REST API with it. Connect's **Skills** tab

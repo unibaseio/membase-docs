@@ -65,12 +65,12 @@ Use these published configuration files and references for your client:
 
 | File | For |
 |---|---|
-| `https://www.app.membase.io/plugin/mcp.json` | the server in the `mcpServers` shape most clients read |
-| `https://www.app.membase.io/plugin/clients/vscode.mcp.json` | VS Code's `servers` shape |
-| `https://www.app.membase.io/plugin/clients/codex.toml` | Codex's `config.toml` snippet |
-| `https://www.app.membase.io/plugin/membase-skill.zip` | the skill folder |
-| `https://www.app.membase.io/plugin/openapi/agent-protocol.json` | the OpenAPI document |
-| `https://www.app.membase.io/skill` | the skill's `SKILL.md` with its install preamble |
+| `https://app.membase.ai/plugin/mcp.json` | the server in the `mcpServers` shape most clients read |
+| `https://app.membase.ai/plugin/clients/vscode.mcp.json` | VS Code's `servers` shape |
+| `https://app.membase.ai/plugin/clients/codex.toml` | Codex's `config.toml` snippet |
+| `https://app.membase.ai/plugin/membase-skill.zip` | the skill folder |
+| `https://app.membase.ai/plugin/openapi/agent-protocol.json` | the OpenAPI document |
+| `https://app.membase.ai/skill` | the skill's `SKILL.md` with its install preamble |
 
 ## Other clients
 
@@ -106,7 +106,7 @@ devin mcp login membase
 
 ### Claude Desktop, and any `mcpServers`-shaped client
 
-Merge `https://www.app.membase.io/plugin/mcp.json` into the client's configuration:
+Merge `https://app.membase.ai/plugin/mcp.json` into the client's configuration:
 
 ```json
 { "mcpServers": { "membase": { "type": "http", "url": "https://api.app.membase.io/mcp-http" } } }
