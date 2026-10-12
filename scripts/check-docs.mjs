@@ -23,8 +23,8 @@ const walk = (dir) =>
 const errors = [];
 const fail = (file, msg) => errors.push(`${file}: ${msg}`);
 
-for (const f of ['gitbook-docs.yaml', '.gitbook.yaml']) {
-  if (fs.existsSync(f)) fail(f, 'GitBook sync config — this repo is Starlight-only; delete it (see CLAUDE.md)');
+for (const f of ['gitbook-docs.yaml', '.gitbook.yaml', 'SUMMARY.md']) {
+  if (fs.existsSync(f)) fail(f, 'GitBook file — this repo is Starlight-only (GitBook is retired); delete it (see CLAUDE.md)');
 }
 
 const pages = walk(DOCS).filter((f) => /\.mdx?$/.test(f));
@@ -68,7 +68,7 @@ for (const f of pages) {
   }
   for (const m of prose.matchAll(/\]\((?!https?:|mailto:|#)([^)\s#]+)(#[^)\s]*)?\)/g)) {
     const target = m[1];
-    if (target.startsWith('/images/') || target.startsWith('/llms')) continue;
+    if (target.startsWith('/llms') || fs.existsSync(path.join('public', decodeURI(target)))) continue; // public/ files
     if (/\.mdx?$/.test(target)) {
       fail(`${f}:${line(m.index)}`, `link "${target}" points at a file — link the page URL instead, e.g. /build/reference/sdk-quickstart/`);
     } else if (target.startsWith('/') && !urls.has(target.endsWith('/') ? target : target + '/')) {
