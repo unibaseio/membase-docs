@@ -60,17 +60,18 @@ before connecting an external app.
 
 For other clients, use [Connect your AI](/connect/).
 
-1. Open **Connect** in the left rail. Apps you have not connected show as dashed tiles.
+1. Open **Connect** in the left rail. Apps you have not connected say **Set up** on their tiles.
 
 ![Connect page](/images/shots/connect-page.png)
 
-2. Pick **Claude** ①. The connector URL and the steps for Claude unfold under the tiles.
+2. Pick **Claude**. The connector URL and the steps for Claude unfold under the tiles.
 
 ![Claude's connector URL and steps](/images/shots/connect-claude-steps.png)
 
-3. Follow those steps in Claude. The last one sends you back to Membase to approve access and
+3. Follow those steps in Claude. The third one sends you back to Membase to approve access and
    tick the memories Claude may read. Tick the memory you just made and press **Approve access**.
-4. Back in Claude, ask a question about your project. Claude reaches for your memory on its own.
+4. Back in Claude, open **+ → Connectors** in a chat and switch Membase on.
+5. Ask a question about your project. Claude reaches for your memory on its own.
 
 After approval, the Claude tile is solid and says *Authorized · awaiting first use*. After
 a successful tool call it shows recent usage. Authorization confirms permission; the answer

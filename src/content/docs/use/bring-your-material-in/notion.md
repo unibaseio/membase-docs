@@ -23,8 +23,10 @@ You need a Memory and permission to share the Notion pages you want it to read.
 5. Open the source and wait for its files to arrive. Return to the Memory and press **Update now**. When the run finishes, inspect **Your memory** or ask about the material.
 
 If your deployment does not offer the Notion card, use [Files](/use/bring-your-material-in/files/)
-to import an export instead. Some deployments offer **Use a token instead** in the picker;
-that token must have access to the pages you select.
+to import an export instead. You can also connect with a Notion integration token: use
+**Use a token instead** under **Connect Notion** or in the workspace's **⋯** menu (where Notion
+sign-in is not set up, the token form is shown directly). The token must have access to the
+pages you select.
 
 ## Update the selection
 
@@ -59,4 +61,4 @@ Disconnecting Notion is not a request to forget what it previously supplied.
 | A page is absent | Check the selected workspace and that the connection has permission to read it. |
 | Files arrived but answers have not changed | Run the Memory; syncing alone does not teach it. |
 | Needs reauthorization | Use **Reauthorize** on the source and finish authorization again. |
-| Sync failed | Open the source's error, check page access, and retry **Sync now**. |
+| Sync failed | Open the source's error, check page access, and press **Retry** on the source. |

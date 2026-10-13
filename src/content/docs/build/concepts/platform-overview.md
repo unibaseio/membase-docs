@@ -84,12 +84,13 @@ covers partial failures, deferred learning and timeouts.
 | Status | Code | When |
 |---|---|---|
 | 400 | `validation` | an empty `q`, both or neither of `content` and `url`, `container` omitted when more than one is in reach |
-| 403 | `unauthorized` | outside the credential's reach, or a verb above its level |
+| 401 | `unauthenticated` | no bearer token on the request |
+| 403 | `unauthorized` | an invalid, expired or revoked key; outside the credential's reach; or a verb above its level |
 | 404 | `not_found` | an unknown document or memory id |
 | 422 | `validation` | a missing or mistyped body field; read `code` to tell it from the row below |
 | 422 | `capability_unavailable` | the account's memory cannot run a turn here (no agent container, no model) |
 | 422 | `reason: dormant` | a free-plan account whose free turns are spent |
-| 429 | `rate_limited` | the account's concurrent-turn budget; retry later |
+| 429 | `rate_limited` | the account's concurrent-turn budget, or the token's per-minute request limit; retry later |
 
 Uploads through `add_document` are capped at 32 MiB per file, on every plan. An account on
 the free plan whose free turns are spent keeps its memory but cannot run turns until it

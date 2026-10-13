@@ -90,9 +90,10 @@ their own: a call without `confirm=true` answers `200` with
 
 and the `how` sentence is what to relay to the person. Pass `confirm=true` only after they
 agreed; from a developer key that counts as the owner's confirmation. A consent token is
-never offered these verbs at all, so from an AI app the call is refused with `403 ·
-unauthorized · tool 'delete_document' is not in this agent's capability profile`, not
-answered with the sentence.
+never offered these verbs at all and is read-scoped, so from an AI app the call is refused
+with `unauthorized · token missing required scope`, not answered with the sentence. A
+**Read & write** key gets `403 · unauthorized · tool 'delete_document' is not in this agent's
+capability profile`.
 
 ## Expiry, rotation, revocation
 
@@ -110,18 +111,19 @@ already received or stored by an external client.
 |---|---|
 | `401` | no bearer at all (REST; the MCP endpoint differs, below) |
 | `403 · unauthorized` | an unknown, expired or revoked token; a container outside the reach; a verb above the level. The message says which. |
-| `403 · unauthorized · not in this agent's capability profile` | the verb is above the key's level |
+| `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key or a consent token |
+| `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `get_profile` without the profile tick |
 | `403 · unauthorized · may not use that container` | the container is outside the reach, or does not exist |
 
 On the REST endpoints the status is `403` and not `401` for a bad token on purpose: the
 request was authenticated as *some* caller (the key id is in the token) and that caller is
 not allowed. Only a request with no bearer is `401`.
 
-The MCP endpoint (`/mcp-http`) follows the OAuth convention instead: a missing bearer and an
-invalid, expired or revoked one both answer `401` with
-`WWW-Authenticate: Bearer error="invalid_token", resource_metadata="https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http"`
-and an RFC 6750 body, `{"error": "invalid_token", "error_description": "…"}`, not the
-`{"error": {"code", …}}` envelope.
+The MCP endpoint (`/mcp-http`) follows the OAuth convention instead and answers `401` in
+both cases, with a flat body rather than the `{"error": {"code", …}}` envelope:
+
+* **No bearer:** `WWW-Authenticate: Bearer resource_metadata="https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http"` and `{"error": "unauthorized", "error_description": "…"}`.
+* **An invalid, expired or revoked bearer:** `WWW-Authenticate: Bearer error="invalid_token", resource_metadata="…"` and the RFC 6750 body `{"error": "invalid_token", "error_description": "…"}`.
 
 ## Managing keys from code
 
@@ -131,8 +133,8 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 | Call | Does |
 |---|---|
-| `POST /v1/api-keys` | mint a key: name, level, container list or `all_views`, profile tick, `expires_in_days` (1–3650; omit for never) |
-| `PATCH /v1/api-keys/{id}` | change its name, level, profile tick or all-containers reach; the next call reads the new grant |
+| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its containers) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
+| `PATCH /v1/api-keys/{id}` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant |
 | `PATCH /v1/exposures/{id}/views` | change its container list |
 | `GET /v1/api-keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
 | `DELETE /v1/exposures/{id}` | revoke it, at once |

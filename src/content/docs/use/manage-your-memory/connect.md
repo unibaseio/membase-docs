@@ -15,8 +15,8 @@ AI, and the page has a tab for each.
 2. **The address** (MCP tab). Copy it into the app's connector or MCP settings; the app opens
    your browser and you approve it on the consent card, ticking the memories it may read. An
    app connected this way can only read.
-3. **The client catalog, by purpose.** *Chat assistants* and *Coding tools*. A dashed tile says
-   *Set up* and unfolds that app's steps; a solid tile says *Authorized · awaiting first use* or
+3. **The client catalog, by purpose.** *Chat assistants* and *Coding tools*. A tile you have not set up says
+   *Set up* and unfolds that app's steps; a connected tile (brand-blue border) says *Authorized · awaiting first use* or
    *Authorized · used …* and opens the app's page; *Approval expired · authorize again* means
    the app must sign in again. An app that has no tile of its own (any other MCP client)
    appears under *Other apps*, with a monogram, once you have approved it.
@@ -50,7 +50,7 @@ developer docs' [API reference](/build/reference/api-reference/).
 
 ## Set an app up by hand
 
-Picking a dashed tile unfolds the connector URL and the steps for that app:
+Picking a tile that says *Set up* unfolds the connector URL and the steps for that app:
 
 ![Claude's steps](/images/shots/connect-claude-steps.png)
 
@@ -59,7 +59,7 @@ Picking a dashed tile unfolds the connector URL and the steps for that app:
 
 ## An app's page
 
-Once connected, the tile opens the app's page: the hero (name, *Authorized · used …* or
+Once connected, the tile opens the app's page: the hero (name, *Authorized · last activity …* or
 *Authorized · awaiting first use*, and the amber words *No memory access* while no memory is
 switched on), a **Uses** card with one row per memory and its switch, and, when there is more
 than one approval, an **Approvals** card with a **Revoke** per credential. **Disconnect…** in the
@@ -119,7 +119,7 @@ shows only the **Tell your AI** sentence, and a key's page shows no snippets aft
 
 Using the key from a script or an SDK is the developer [Quickstart](/build/getting-started/api-quickstart/);
 using it in Claude Code, Codex, Cursor or Kimi Code is on each client's page under
-**Connect your AI**.
+[Connect your AI](/connect/).
 
 ### A key's page
 

@@ -36,10 +36,10 @@ What a Memory's tile says in the app, and what it means to code:
 
 | Tile word | Meaning | In the API |
 |---|---|---|
-| *Empty* | no instruction yet | listed, searches answer nothing |
 | *Add a source* | reads nothing yet | listed, `list_documents` is empty |
 | *On sale* | listed on the Marketplace | buyers hold agent-endpoint credentials to it |
 | *Subscribed* | bought from someone else | `ask_agent` only; no documents, no writes |
+| no word | yours, reading at least one source | listed; searches answer from what its runs learned |
 
 Renaming a Memory changes `name` and `container_name`; the id never changes. Deleting a
 Memory is the owner's, in the app, and has no agent-protocol verb.
@@ -62,11 +62,14 @@ seconds per request, which is configurable and is not a latency guarantee. There
 them to: put what matters in the content. Search is retrieval; `ask` is an answer.
 
 A Memory with no learned content may return no results. An explicitly requested container
-outside the key’s reach is refused with `403`; an untargeted search omits it. Check
+outside the key’s reach is refused with `403` on a key limited to listed Memories, and with
+`404 · not_found` on an *All memories* key when the id is not one of the account's; an
+untargeted search omits it. Check
 `containers[].error` before interpreting an empty result: an unavailable model is a failed
 search, not evidence that no matching memory exists. That field holds only a Memory that
 could not run a turn (no model, dormant, no agent container); any other failure inside one
-Memory fails the whole request. Search never answers `429`.
+Memory fails the whole request. Search is not held to the two-turns-at-once limit, but like
+every call it can answer `429` when the token exceeds its per-minute request limit.
 
 ## The profile
 
@@ -190,8 +193,8 @@ Both need a Full access key, and even then they do not run on a bare call: witho
 `confirm=true` the answer is `200` with `status: confirmation_required` and a `how` sentence
 to relay to the person. Pass `confirm=true` only after they agreed; from a developer key that
 counts as the owner's confirmation. A consent-minted client is never offered these verbs at
-all: from an AI app the call is refused with `403 · unauthorized · tool 'delete_document' is
-not in this agent's capability profile`, not answered with the sentence. What is
+all: its token is read-only, so from an AI app the call is refused with `403 · unauthorized ·
+token missing required scope`, not answered with the sentence. What is
 forgotten or deleted is gone from the next search; nothing on the platform caches it.
 
 Deleting a Memory, a source's imported material or the account has no agent-protocol verb;
@@ -218,7 +221,7 @@ AI about behaving beneath the ceiling the server enforces.
 | deletes the Memory | it is no longer listed; searches no longer answer from it |
 | has no working model for its agent | a failed turn, surfaced as `422 · capability_unavailable` or a search entry in `containers[].error`; stored memory remains, documents may wait unread. Read `code` on a `422`: `validation` there is a malformed body, not a model problem |
 | is on the free plan with its free turns spent | `422 · reason: dormant` until they bring a model or move to a paid plan |
-| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited` on `add_memory` with `static`, `forget_memory` and `ask_agent` (search never raises it; `add_document` never does, its learning is deferred with `learning_run` null); no `Retry-After` is sent; the SDK backs off and retries twice |
+| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits `add_memory` with `static`, `forget_memory` and `ask_agent` (search is not held to it; `add_document` defers its learning instead, with `learning_run` null); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
 
 ## Rules of the road
 

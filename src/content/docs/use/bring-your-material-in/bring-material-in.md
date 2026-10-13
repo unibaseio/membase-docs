@@ -31,8 +31,11 @@ If the files are not in your Files yet, put them there first from the Files page
 
 Press **Upload** on *Upload files* and drop the files. They land in a folder named
 “<memory name> uploads” (“… uploads (2)” if that name is taken) at the top of your Files, which
-is connected as a source on the spot. Markdown, text and
-the common document formats are accepted; the dialog tells you before sending if a file is not.
+is connected as a source on the spot. Accepted: text formats (`.md`, `.markdown`, `.mdown`,
+`.txt`, `.csv`, `.json`, `.jsonl`, `.yaml`, `.yml`); PDFs and images once a model is set up in
+[AI Setup](/use/account-and-models/ai-setup/); and `.zip` archives, which are unpacked into a
+folder. Office files (`.docx`, `.xlsx`, `.pptx` …) are refused: convert them to PDF or Markdown
+first. Each file can be up to 32 MiB. The dialog tells you before sending if a file is not accepted.
 
 ## Notion
 
@@ -45,10 +48,15 @@ A sync fetches those pages; the Memory still needs a run to learn from them. Fol
 The Unibase Memory browser extension captures your conversations with other assistants and
 hands them to a memory as a source.
 
-1. Press **Install** on *Unibase memory*. Once the extension is connected, the same door says
-   **Use here**.
-2. Press **Use here**. The door says *Added* and the source appears in the Add card.
-3. Select **Update now**.
+1. Press **Install** on *Unibase memory*. A **Connect Unibase Memory** dialog opens; if the
+   extension is not installed yet, use its **Install browser extension** link and sign the
+   extension in with the same wallet.
+2. Press **Connect wallet** and approve the two signatures. The door says *Added* and the source
+   appears in the Add card; syncing continues in the background.
+3. When the sync finishes, select **Update now**.
+
+If your account already has this connection (another memory uses it, say), the door says
+**Use here**; press it to add the same source to this memory.
 
 A memory over your conversations keeps memory about *you*: what you asked, decided, adopted. It
 does not restate what an assistant explained. Its instruction is a filter on the chats, not a

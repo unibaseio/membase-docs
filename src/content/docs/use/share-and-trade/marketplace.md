@@ -23,7 +23,7 @@ still show for the people who bought them:
 
 | Type | What you receive |
 |---|---|
-| Agent endpoint | A per-listing MCP connector URL your AI calls with `agent_invoke`; answers, never files. Valid 30 days per payment; renew to continue |
+| Agent endpoint | A per-listing MCP connector URL your AI calls with `ask_agent`; answers, never files. Valid 30 days per payment; renew to continue |
 | Snapshot (no longer offered) | A copy of the listed items at purchase time; later seller edits do not update it |
 | Live memory (no longer offered) | Read access to the seller's memory for the subscription period |
 
@@ -48,8 +48,8 @@ A subscription also appears as a *Subscribed* tile on your Memory page:
 
 ![A subscribed memory](/images/shots/memory-subscribed.png)
 
-Its page shows the seller and access period. **Read by** selects which of your agents may
-consult it. **Read from an app** provides connection details when available. You cannot edit
+Its page shows the seller and access period. **Read by** selects which one of your agents may
+consult it; switching on another agent moves the subscription to that agent. **Read from an app** provides connection details when available. You cannot edit
 the seller's memory. Review the confirmation before unsubscribing.
 
 ### Selling
@@ -61,8 +61,9 @@ the seller's memory. Review the confirmation before unsubscribing.
 
 ![Listing a memory](/images/shots/marketplace-list-dialog.png)
 
-Manage listings under **Your listings**, where each row offers **Publish**, **Edit** and
-**Delete**; on the Memory's side, Settings › Sharing › Marketplace offers **Unlist…**. Before
+Manage listings under **Your listings**. Each row offers **Edit**, **Subscribers**, **View as a
+buyer** and **Delete**, plus **Publish** on a *draft* or **Make private** on a *live* listing;
+on the Memory's side, Settings › Sharing › Marketplace offers **Unlist…**. Before
 deleting or unlisting, review how the action affects existing subscribers. Removing a listing
 and deleting the Memory itself are separate actions.
 

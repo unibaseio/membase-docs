@@ -26,7 +26,11 @@ enforced server-side, so the SDK cannot do anything the key cannot.
 pip install unibaseio-membase
 ```
 
-Python 3.10 or newer. One dependency, `httpx`.
+Python 3.10 or newer for the hosted client. One dependency, `httpx`.
+
+For local mode, `pip install 'unibaseio-membase[local]'` on Python 3.12 or 3.13. It installs the
+`unibaseio-membase-core` engine and runs memory on your machine; the engine calls a model
+provider, by default OpenAI (`OPENAI_API_KEY`).
 
 </TabItem>
 
@@ -39,6 +43,7 @@ npm install @unibaseio/membase
 ```
 
 Node 18 or newer (global `fetch`), Deno or Bun. Zero dependencies; responses are typed.
+The package is ESM only: from a CommonJS project, use an `.mts` file or set `"type": "module"`.
 
 </TabItem>
 
@@ -72,7 +77,7 @@ from membase import Membase
 
 client = Membase()                              # MEMBASE_API_KEY from the environment
 client = Membase(api_key="mbk_…")               # or explicit
-client = Membase(base_url="http://localhost:8080")   # a self-hosted Membase
+client = Membase(local=True)                    # local mode, in ~/.membase (MEMBASE_LOCAL=1 when no key is set)
 ```
 
 </TabItem>
@@ -86,7 +91,7 @@ import { Membase } from "@unibaseio/membase";
 
 const client = new Membase();                                    // MEMBASE_API_KEY from the environment
 const explicit = new Membase({ apiKey: "mbk_…" });               // or explicit
-const local = new Membase({ baseUrl: "http://localhost:8080" }); // a self-hosted Membase
+const local = new Membase({ apiKey: "local", baseUrl: "http://127.0.0.1:8787" }); // `membase --local serve`
 ```
 
 </TabItem>
@@ -99,10 +104,15 @@ const local = new Membase({ baseUrl: "http://localhost:8080" }); // a self-hoste
 |---|---|---|---|
 | Request timeout | `timeout` (seconds) | `timeoutMs` (milliseconds) | 90 seconds |
 | Retry limit | `max_retries` | `maxRetries` | 2 |
-| API origin | `base_url` | `baseUrl` | `https://api.app.membase.com` |
+| API origin | `base_url` | `baseUrl` | `MEMBASE_BASE_URL`, else `https://api.app.membase.ai` |
 
-Earlier releases default to `https://api.app.membase.ai` or `https://api.app.membase.io`; both
-still serve the same API.
+The released packages (`unibaseio-membase` 0.3.2, `@unibaseio/membase` 0.3.1) default to
+`https://api.app.membase.ai`, which serves the same API as `https://api.app.membase.com`.
+
+A client for an API origin always needs a key: without `api_key` or `MEMBASE_API_KEY` the
+constructor raises (`ValueError` in Python, `Error` in TypeScript), even when a base URL is
+given. To talk to `membase --local serve` from either language, pass any key with
+`http://127.0.0.1:8787`, or the value of `MEMBASE_LOCAL_TOKEN` when the server sets one.
 
 Retries cover connection errors, timeouts, 408, 409, 429 and 5xx, with exponential backoff;
 a numeric `Retry-After` is honoured when present (the server sends none today).
@@ -233,7 +243,7 @@ One class per HTTP status, all carrying the API's error envelope: `code` (which 
 | 404 | `NotFoundError` | an unknown document or memory id |
 | 409 | `ConflictError` | a conflicting write; retried automatically, then raised |
 | 422 | `UnprocessableEntityError` | `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Also `code: validation` for a malformed body (a missing or mistyped required field), so read `code`, not only the status |
-| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`) or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. `search` does not raise it and `add` never does |
+| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. `search` does not raise it and `add` never does |
 | 5xx | `InternalServerError` | retried automatically, then raised |
 | — | `APIConnectionError`, `APITimeoutError` | the request never got an answer |
 

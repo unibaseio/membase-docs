@@ -45,7 +45,9 @@ listing; fetch the files by name, or take the zip.
 
 ## Without the skill
 
-Any agent can be handed the OpenAPI document instead and asked to generate a client:
+Any agent can be handed the OpenAPI document instead. The command below generates TypeScript
+types (pair them with `openapi-fetch` for a typed client); OpenAPI Generator makes a client for
+another language:
 
 ```bash
 curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json

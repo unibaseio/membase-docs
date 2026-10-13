@@ -34,7 +34,8 @@ agent that answers from the seller's Memory; check its **Included access** befor
 
 Adding or syncing a source makes material available to a Memory. Select **Update now** to
 process it, or configure a schedule. Check the run's **Report** to see whether it completed.
-An integration using `add_document` can also request learning through the API.
+A document added through the API with `add_document` starts learning on its own; poll the
+document until `learned` is true.
 
 ## Stopping and undoing
 
@@ -48,7 +49,7 @@ selected action; subscription timing is shown in the relevant plan or purchase d
 | **Revoke…** a developer key | stops subsequent requests using that key | create a new key |
 | **Remove** a source from a Memory | stops that Memory reading the source | add the source again |
 | **Pause** a schedule | stops future scheduled runs | resume the schedule |
-| **End** a conversation | keeps its transcript readable and stops new turns | start or branch a conversation |
+| **End** a conversation | keeps its transcript readable and stops new turns | start a new conversation |
 | **Delete…** a Memory | permanently removes its stored content and affects dependent agents or listings | cannot restore from Trash |
 | **Delete conversation** | removes the transcript; previously saved memory is retained | cannot undo |
 | **Delete everything** in Settings | removes account data; retains the sign-in identity | cannot undo |

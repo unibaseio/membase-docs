@@ -3,9 +3,24 @@ title: "What's new"
 description: "New features and significant updates for Membase users and developers."
 ---
 
-New features and significant updates for Membase users and developers.
-
 New features and significant product changes, newest first.
+
+## October 2026
+
+**SDK packages renamed (11 Oct).** The Python SDK is now `unibaseio-membase` on PyPI and the
+TypeScript SDK `@unibaseio/membase` on npm, both from 0.3.0. The Python package includes the
+`membase` command line; `@unibaseio/membase-cli` provides the same command for the hosted API
+without Python. `pip install 'unibaseio-membase[local]'` adds an MCP server (`membase mcp`)
+and, on Python 3.12 or 3.13, runs the memory engine on your machine: `Membase(local=True)` in
+Python, or `membase --local serve` for the same API over local HTTP.
+[SDKs](/build/reference/sdk-quickstart/).
+
+**membase.com (20 Oct).** The docs are at docs.membase.com, the web app at
+[app.membase.com](https://app.membase.com) and the API at `https://api.app.membase.com`. The
+`.ai` and `.io` web addresses redirect there; `https://api.app.membase.ai` and
+`https://api.app.membase.io` keep serving the same API.
+
+**Documentation moved (9 Oct).** These docs moved to their own site.
 
 ## September 2026
 
@@ -27,9 +42,11 @@ memory access and expiry dates. Manage or revoke access at any time. In **Connec
 **MCP** tab for supported AI apps or the **Skills** tab for agents that can run commands.
 [Connect your AI](/connect/).
 
-**Memory access through MCP and REST (17 Sep).** Connected apps can search memories,
-read documents and retrieve profiles. With the appropriate permissions, they can also add
-content and remove documents or memory entries. [API reference](/build/reference/api-reference/).
+**Memory access through MCP and REST (17 Sep).** Apps connected through MCP can list and
+search the Memories you approved, and read your profile when you tick **Profile access**.
+Developer keys add document reading at **Read**, adding content at **Read & write**, and
+removing documents or memory entries at **Full access**, where each removal needs explicit
+confirmation. [API reference](/build/reference/api-reference/).
 
 **Invitations (16 Sep).** Share your invitation link to invite others to Membase.
 

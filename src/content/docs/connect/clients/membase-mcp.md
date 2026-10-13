@@ -32,8 +32,11 @@ who prefers a key they minted:
 Authorization: Bearer mbk_…
 ```
 
-No consent round-trip; the key's access level and reach apply, up to Full access. The
-ready-made config files carry no header, so a key never ends up in a public file.
+No consent round-trip; the key's access level and reach apply, up to Full access. An
+unknown, expired or revoked key gets `401` with `WWW-Authenticate: Bearer error="invalid_token"`
+on every request, `initialize` and `tools/list` included, so the client reports that it cannot
+connect or needs authentication rather than showing tools. The ready-made config files carry
+no header, so a key never ends up in a public file.
 
 ## What a connected client sees
 
@@ -47,8 +50,11 @@ ready-made config files carry no header, so a key never ends up in a public file
 | developer key, Full access | plus `delete_document`, `forget_memory` |
 | an agent or workflow exposure | `ask_agent` or `workflow_invoke` |
 
-A tool outside the caller's list is refused with `403 unauthorized` ("tool '…' is not in this
-agent's capability profile"): a consent-minted client cannot write, delete or forget at all.
+A call to a tool outside the caller's list is refused as a tool error (HTTP `200`,
+`isError: true`), not an HTTP status: *token missing required scope* when a read-only
+credential (a consent token or a Read key) calls a writing tool, *tool '…' is not in this
+agent's capability profile* when the tool is above a key's level otherwise. A consent-minted client cannot write,
+delete or forget at all. The REST API answers the same refusals with `403 unauthorized`.
 A Full access key that calls `delete_document` or `forget_memory` without `confirm=true`
 answers `status: confirmation_required` with a `how` sentence for the model to relay. Retired
 tool names (`memory_view_query`, `memory_list`, `memory_recall`, `memory_remember`,
@@ -104,13 +110,16 @@ devin mcp add --scope user membase https://api.app.membase.com/mcp-http
 devin mcp login membase
 ```
 
-### Claude Desktop, and any `mcpServers`-shaped client
+### Any `mcpServers`-shaped client
 
 Merge `https://app.membase.com/plugin/mcp.json` into the client's configuration:
 
 ```json
 { "mcpServers": { "membase": { "type": "http", "url": "https://api.app.membase.com/mcp-http" } } }
 ```
+
+Claude Desktop's `claude_desktop_config.json` is for local servers it launches itself; add
+Membase in Claude as a custom connector instead, as [Claude](/connect/clients/claude/) describes.
 
 ### Any other client, or your own
 
