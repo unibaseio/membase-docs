@@ -1,6 +1,6 @@
 # Membase Docs — writing guide
 
-This repo is the source of **docs.membase.ai**, built with **[Starlight](https://starlight.astro.build)**
+This repo is the source of **docs.membase.com**, built with **[Starlight](https://starlight.astro.build)**
 (Astro). It is **not GitBook**: GitBook syntax still builds but renders wrong — `{% hint %}` shows
 up as literal text, image paths break, titles appear twice. Every push to `main` deploys.
 

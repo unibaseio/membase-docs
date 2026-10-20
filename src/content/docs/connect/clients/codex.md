@@ -15,7 +15,7 @@ Codex, the CLI and the IDE extension, reads Membase over MCP, and can take the s
 ## Set up
 
 ```bash
-codex mcp add membase --url https://api.app.membase.io/mcp-http
+codex mcp add membase --url https://api.app.membase.com/mcp-http
 codex mcp login membase
 codex mcp list
 ```
@@ -29,12 +29,12 @@ extension* and *Authenticate*. A server added on one side appears on the other.
 
 ## With a developer key
 
-The snippet Membase serves at `https://app.membase.ai/plugin/clients/codex.toml` is the
+The snippet Membase serves at `https://app.membase.com/plugin/clients/codex.toml` is the
 server alone, for `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.membase]
-url = "https://api.app.membase.io/mcp-http"
+url = "https://api.app.membase.com/mcp-http"
 ```
 
 Membase writes no Codex snippet with a key in it. If your Codex build takes a static header on
@@ -42,7 +42,7 @@ a Streamable HTTP server, add one under `[mcp_servers.membase]` with the key as
 `Authorization: Bearer mbk_…`; the setting's name is Codex's own and is not checked here, so
 the plain way to give Codex a key is the skill:
 
-> Install Membase from https://app.membase.ai/skill using key mbk_…
+> Install Membase from https://app.membase.com/skill using key mbk_…
 
 Codex installs the folder beside `AGENTS.md`, points to it from there, and keeps the key as
 `MEMBASE_API_KEY` under `env` in its `config.toml`. With the MCP tools already present it

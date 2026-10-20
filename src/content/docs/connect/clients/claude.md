@@ -17,7 +17,7 @@ Memories you switch on for it. For Claude Code, the command-line agent, see
 ## Set up
 
 1. **Customize → Connectors → + → Add custom connector**.
-2. Paste `https://api.app.membase.io/mcp-http` and confirm.
+2. Paste `https://api.app.membase.com/mcp-http` and confirm.
 3. Finish the authorization in the browser. On Membase's consent screen tick the Memories Claude may use and, if it may read the profile, **Profile access**; press **Approve access**. The last page you should see is Claude's own; if you end up on Membase instead, Claude did not receive the code: retry the connection from Claude.
 4. In a chat, open **+ → Connectors** and switch Membase on, then ask *"List my Membase containers."*
 

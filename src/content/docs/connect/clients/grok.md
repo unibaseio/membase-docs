@@ -20,7 +20,7 @@ consent completed.
 
 1. Open `grok.com/connectors`.
 2. **New Connector → Custom**.
-3. Enter the server URL, `https://api.app.membase.io/mcp-http`, and complete the authentication: the browser opens Membase's consent screen. Tick the Memories Grok may use and, if it may read the profile, **Profile access**; press **Approve access**.
+3. Enter the server URL, `https://api.app.membase.com/mcp-http`, and complete the authentication: the browser opens Membase's consent screen. Tick the Memories Grok may use and, if it may read the profile, **Profile access**; press **Approve access**.
 4. Grok discovers the tools the server exposes for that consent. Ask *"List my Membase containers."*
 
 ## With a developer key

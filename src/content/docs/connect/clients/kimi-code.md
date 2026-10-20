@@ -16,7 +16,7 @@ runs commands, so it can take the skill as well.
 ## Set up
 
 ```bash
-kimi mcp add --transport http --auth oauth membase https://api.app.membase.io/mcp-http
+kimi mcp add --transport http --auth oauth membase https://api.app.membase.com/mcp-http
 kimi mcp auth membase
 kimi mcp list
 ```
@@ -30,7 +30,7 @@ completed.
 ## With a developer key
 
 ```bash
-kimi mcp add --transport http membase https://api.app.membase.io/mcp-http \
+kimi mcp add --transport http membase https://api.app.membase.com/mcp-http \
   --header "Authorization: Bearer mbk_…"
 ```
 
