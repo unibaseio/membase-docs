@@ -14,4 +14,5 @@ nvm use          # Node 22 (.nvmrc)
 npm install
 npm run dev      # http://localhost:4321
 npm run build    # -> dist/
+npm run indexnow # after a deploy is live: push every page (or the URLs you pass) to IndexNow
 ```
