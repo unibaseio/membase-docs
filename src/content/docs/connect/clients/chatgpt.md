@@ -17,7 +17,7 @@ ChatGPT connects to Membase as a custom MCP server and reads the Memories you sw
 1. Open **ChatGPT Plugins** (`https://chatgpt.com/plugins`) and press **+**. Fill the dialog:
    * a name (*Membase*) and a description;
    * **Connection**: choose the public MCP server connection;
-   * the complete URL, path included: `https://api.app.membase.io/mcp-http`;
+   * the complete URL, path included: `https://api.app.membase.com/mcp-http`;
    * **Authentication**: *OAuth*. Leave Client ID and Secret empty: ChatGPT registers itself with the server.
    If ChatGPT asks you to enable **Developer mode**, follow the on-screen instructions.
 2. Accept the trust prompt and press **Create**.
@@ -58,5 +58,5 @@ Membase's Connect. ChatGPT does not tell the server when a plugin is removed.
 | ChatGPT asks for **Developer mode** | the plugin dialog needs it on this plan, or a workspace admin turned it off | follow ChatGPT's on-screen instructions |
 | the plugin is created but never appears in a chat | it is not added to this conversation | start a new conversation and add Membase from the tools menu |
 | *No memory access* on ChatGPT's page in Connect | authorized, no Memory switched on | switch one on under **Uses** |
-| the consent screen never opens | the URL has a typo, or misses the path (a bare domain, `/mcp`) | paste `https://api.app.membase.io/mcp-http` exactly |
+| the consent screen never opens | the URL has a typo, or misses the path (a bare domain, `/mcp`) | paste `https://api.app.membase.com/mcp-http` exactly |
 | the model answers from nothing about you | **Profile access** was not ticked at consent | **Disconnect…** on ChatGPT's page in Connect, set the plugin up again and tick it |

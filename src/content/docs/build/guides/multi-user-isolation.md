@@ -36,7 +36,7 @@ person minted or approved. Three shapes fit most products.
 ### Your product is an MCP client
 
 If your product can act as an MCP client (an agent framework, a desktop app, anything that
-speaks Streamable HTTP and OAuth), point it at `https://api.app.membase.io/mcp-http`. Each
+speaks Streamable HTTP and OAuth), point it at `https://api.app.membase.com/mcp-http`. Each
 user completes the consent screen once; your product holds one consent token per user and
 gets `list_containers`, `search_memories` and, when the user ticked it, `get_profile`. It
 cannot write and cannot see a Memory the user did not tick. The flow is in

@@ -36,9 +36,9 @@ What the skill teaches, so you can check the result:
 | treat `403` as withdrawn access and stop | the owner narrowed or revoked the key on Connect |
 | use a suitable timeout and inspect `containers[].error` | a cold runtime or failed search must not be reported as an empty Memory |
 
-The skill is served at `https://app.membase.ai/skill` (its `SKILL.md` with the install
-preamble) and as a zip at `https://app.membase.ai/plugin/membase-skill.zip`. Its files are
-under `https://app.membase.ai/plugin/skills/membase/`: `SKILL.md`, `README.md` and
+The skill is served at `https://app.membase.com/skill` (its `SKILL.md` with the install
+preamble) and as a zip at `https://app.membase.com/plugin/membase-skill.zip`. Its files are
+under `https://app.membase.com/plugin/skills/membase/`: `SKILL.md`, `README.md` and
 `references/api-reference.md`, `references/sdk-guide.md`, `references/mcp-setup.md`,
 `references/quickstart.md`, `references/use-cases.md`. That directory address itself is not a
 listing; fetch the files by name, or take the zip.
@@ -48,7 +48,7 @@ listing; fetch the files by name, or take the zip.
 Any agent can be handed the OpenAPI document instead and asked to generate a client:
 
 ```bash
-curl -s https://app.membase.ai/plugin/openapi/agent-protocol.json -o agent-protocol.json
+curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json
 npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 

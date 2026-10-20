@@ -99,7 +99,10 @@ const local = new Membase({ baseUrl: "http://localhost:8080" }); // a self-hoste
 |---|---|---|---|
 | Request timeout | `timeout` (seconds) | `timeoutMs` (milliseconds) | 90 seconds |
 | Retry limit | `max_retries` | `maxRetries` | 2 |
-| API origin | `base_url` | `baseUrl` | `https://api.app.membase.io` |
+| API origin | `base_url` | `baseUrl` | `https://api.app.membase.com` |
+
+Earlier releases default to `https://api.app.membase.ai` or `https://api.app.membase.io`; both
+still serve the same API.
 
 Retries cover connection errors, timeouts, 408, 409, 429 and 5xx, with exponential backoff;
 a numeric `Retry-After` is honoured when present (the server sends none today).
@@ -303,5 +306,5 @@ learned `search_memories` in Claude is calling what your code calls `search`.
 Any HTTP client works, and the OpenAPI document generates a typed client in any language:
 
 ```bash
-npx openapi-typescript https://app.membase.ai/plugin/openapi/agent-protocol.json -o membase.d.ts
+npx openapi-typescript https://app.membase.com/plugin/openapi/agent-protocol.json -o membase.d.ts
 ```

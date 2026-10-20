@@ -24,7 +24,7 @@ Look up the word on screen, or the status in the answer.
 
 | It says | What it means | Do |
 |---|---|---|
-| the server never authorizes | the URL has a typo or a wrong path (`/mcp`, a bare domain), or the consent tab was closed | paste `https://api.app.membase.io/mcp-http` exactly; run the login again |
+| the server never authorizes | the URL has a typo or a wrong path (`/mcp`, a bare domain), or the consent tab was closed | paste `https://api.app.membase.com/mcp-http` exactly; run the login again |
 | *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on the client's page, or **Use in** on the Memory |
 | the tools appear, every call is refused | the key in the header is expired or revoked | rotate it and update the file |
 | a write is refused | the connection is consent-minted (read-only), or the key is Read | mint a Read & write key and use it instead |
@@ -50,7 +50,7 @@ Look up the word on screen, or the status in the answer.
 | `429 · rate_limited` | the account's concurrent-turn budget | retry later; the SDK retries twice with backoff |
 | `202` with `document_id: null` | the folder sync had not written the row yet | list the container's documents in a moment |
 | a search takes a minute | the container was asleep | allow time for startup; check for errors if the request times out |
-| `405` on the MCP URL | a wrong path that missed the mount, e.g. `/mcp` or `/mcp-http/v1` | use `https://api.app.membase.io/mcp-http` exactly; a trailing slash is fine |
+| `405` on the MCP URL | a wrong path that missed the mount, e.g. `/mcp` or `/mcp-http/v1` | use `https://api.app.membase.com/mcp-http` exactly; a trailing slash is fine |
 
 ## On the extension
 

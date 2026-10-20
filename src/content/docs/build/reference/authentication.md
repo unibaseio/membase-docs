@@ -5,7 +5,7 @@ description: "Every call carries a bearer. What the two credentials are, what an
 
 Every call carries a bearer. What the two credentials are, what an access level grants, what reach and the profile tick add, and how a key ends.
 
-Every request to `https://api.app.membase.io` carries one header:
+Every request to `https://api.app.membase.com` carries one header:
 
 ```
 Authorization: Bearer <credential>
@@ -119,7 +119,7 @@ not allowed. Only a request with no bearer is `401`.
 
 The MCP endpoint (`/mcp-http`) follows the OAuth convention instead: a missing bearer and an
 invalid, expired or revoked one both answer `401` with
-`WWW-Authenticate: Bearer error="invalid_token", resource_metadata="https://api.app.membase.io/.well-known/oauth-protected-resource/mcp-http"`
+`WWW-Authenticate: Bearer error="invalid_token", resource_metadata="https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http"`
 and an RFC 6750 body, `{"error": "invalid_token", "error_description": "…"}`, not the
 `{"error": {"code", …}}` envelope.
 
@@ -139,7 +139,7 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 ## OAuth, for an app that connects over MCP
 
-The MCP server at `https://api.app.membase.io/mcp-http` advertises its authorization the
+The MCP server at `https://api.app.membase.com/mcp-http` advertises its authorization the
 standard way, so any MCP client that speaks OAuth connects without a Membase-specific step:
 
 1. An unauthenticated request answers `401` with a `WWW-Authenticate` pointing at the protected-resource metadata (`/.well-known/oauth-protected-resource/mcp-http`, RFC 9728).

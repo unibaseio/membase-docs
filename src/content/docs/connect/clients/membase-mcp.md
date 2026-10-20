@@ -6,7 +6,7 @@ description: "The MCP server itself: how a client discovers it, the two ways to 
 The MCP server itself: how a client discovers it, the two ways to authenticate, what a connected client sees, the ready-made config files, and the clients without a page of their own.
 
 ```
-https://api.app.membase.io/mcp-http
+https://api.app.membase.com/mcp-http
 ```
 
 One URL for every client. Streamable HTTP, JSON responses, with or without a trailing slash
@@ -19,7 +19,7 @@ step.
 
 **OAuth consent**, for the person's own AI apps. An unauthenticated request answers `401`
 with `WWW-Authenticate` pointing at
-`https://api.app.membase.io/.well-known/oauth-protected-resource/mcp-http` (RFC 9728). The
+`https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http` (RFC 9728). The
 metadata names the authorization server and its registration endpoint; the client registers
 itself (RFC 7591) and runs the authorization code flow with PKCE. The browser opens Membase's
 consent screen; the person ticks the Memories the app may use and whether it may read their
@@ -65,12 +65,12 @@ Use these published configuration files and references for your client:
 
 | File | For |
 |---|---|
-| `https://app.membase.ai/plugin/mcp.json` | the server in the `mcpServers` shape most clients read |
-| `https://app.membase.ai/plugin/clients/vscode.mcp.json` | VS Code's `servers` shape |
-| `https://app.membase.ai/plugin/clients/codex.toml` | Codex's `config.toml` snippet |
-| `https://app.membase.ai/plugin/membase-skill.zip` | the skill folder |
-| `https://app.membase.ai/plugin/openapi/agent-protocol.json` | the OpenAPI document |
-| `https://app.membase.ai/skill` | the skill's `SKILL.md` with its install preamble |
+| `https://app.membase.com/plugin/mcp.json` | the server in the `mcpServers` shape most clients read |
+| `https://app.membase.com/plugin/clients/vscode.mcp.json` | VS Code's `servers` shape |
+| `https://app.membase.com/plugin/clients/codex.toml` | Codex's `config.toml` snippet |
+| `https://app.membase.com/plugin/membase-skill.zip` | the skill folder |
+| `https://app.membase.com/plugin/openapi/agent-protocol.json` | the OpenAPI document |
+| `https://app.membase.com/skill` | the skill's `SKILL.md` with its install preamble |
 
 ## Other clients
 
@@ -84,7 +84,7 @@ Command palette → *MCP: Add Server* → *HTTP* → the URL → complete the OA
 `.vscode/mcp.json`:
 
 ```json
-{ "servers": { "membase": { "type": "http", "url": "https://api.app.membase.io/mcp-http" } } }
+{ "servers": { "membase": { "type": "http", "url": "https://api.app.membase.com/mcp-http" } } }
 ```
 
 ### Windsurf
@@ -92,7 +92,7 @@ Command palette → *MCP: Add Server* → *HTTP* → the URL → complete the OA
 `~/.codeium/windsurf/mcp_config.json`, in the `mcpServers` shape:
 
 ```json
-{ "mcpServers": { "membase": { "serverUrl": "https://api.app.membase.io/mcp-http" } } }
+{ "mcpServers": { "membase": { "serverUrl": "https://api.app.membase.com/mcp-http" } } }
 ```
 
 Then refresh the MCP list in Windsurf's settings and complete the OAuth prompt.
@@ -100,16 +100,16 @@ Then refresh the MCP list in Windsurf's settings and complete the OAuth prompt.
 ### Devin
 
 ```bash
-devin mcp add --scope user membase https://api.app.membase.io/mcp-http
+devin mcp add --scope user membase https://api.app.membase.com/mcp-http
 devin mcp login membase
 ```
 
 ### Claude Desktop, and any `mcpServers`-shaped client
 
-Merge `https://app.membase.ai/plugin/mcp.json` into the client's configuration:
+Merge `https://app.membase.com/plugin/mcp.json` into the client's configuration:
 
 ```json
-{ "mcpServers": { "membase": { "type": "http", "url": "https://api.app.membase.io/mcp-http" } } }
+{ "mcpServers": { "membase": { "type": "http", "url": "https://api.app.membase.com/mcp-http" } } }
 ```
 
 ### Any other client, or your own

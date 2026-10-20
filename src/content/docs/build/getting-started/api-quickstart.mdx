@@ -26,7 +26,7 @@ export MEMBASE_API_KEY="mbk_…"
 ```
 
 The [key guide](/use/manage-your-memory/connect/#developer-keys) explains rotation and
-revocation. The examples call `https://api.app.membase.io`.
+revocation. The examples call `https://api.app.membase.com`.
 
 ## 2. Add, wait, then search
 
@@ -141,7 +141,7 @@ shell where you exported the key. A failed HTTP request stops the script.
 
 ```bash
 set -euo pipefail
-BASE=https://api.app.membase.io
+BASE=https://api.app.membase.com
 AUTH="Authorization: Bearer $MEMBASE_API_KEY"
 containers=$(curl --fail-with-body -sS "$BASE/v1/containers" -H "$AUTH")
 container=$(jq -er '.containers | if length == 1 then .[0].id else error("Select exactly one Memory on the key") end' <<< "$containers")

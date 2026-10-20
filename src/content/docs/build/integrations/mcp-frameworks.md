@@ -12,7 +12,7 @@ Mastra, and most others) needs no Membase-specific code. Give it the server as a
 HTTP endpoint with the key in the header:
 
 ```json
-{ "url": "https://api.app.membase.io/mcp-http",
+{ "url": "https://api.app.membase.com/mcp-http",
   "headers": { "Authorization": "Bearer mbk_…" } }
 ```
 
@@ -31,7 +31,7 @@ patterns.
 Any HTTP client works, and the OpenAPI document generates a typed client for any language:
 
 ```bash
-curl -s https://app.membase.ai/plugin/openapi/agent-protocol.json -o agent-protocol.json
+curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json
 npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 

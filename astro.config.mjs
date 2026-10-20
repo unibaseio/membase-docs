@@ -3,11 +3,11 @@ import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
 
 export default defineConfig({
-  site: 'https://docs.membase.ai',
+  site: 'https://docs.membase.com',
   integrations: [
     starlight({
       title: 'Membase Docs',
-      favicon: '/favicon.ico', // same icon as membase.ai
+      favicon: '/favicon.ico', // same icon as membase.com
       plugins: [starlightLlmsTxt()], // /llms.txt, /llms-full.txt for AI readers
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/unibaseio/membase-ai' }],
       sidebar: [
@@ -312,7 +312,7 @@ export default defineConfig({
     "items": [
       {
         "label": "Open Membase",
-        "link": "https://app.membase.ai"
+        "link": "https://app.membase.com"
       },
       {
         "label": "membase-ai on GitHub",

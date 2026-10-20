@@ -19,7 +19,7 @@ able to do.
 ### Over MCP, with consent
 
 ```bash
-claude mcp add --transport http --scope user membase https://api.app.membase.io/mcp-http
+claude mcp add --transport http --scope user membase https://api.app.membase.com/mcp-http
 claude mcp login membase
 ```
 
@@ -33,7 +33,7 @@ read-only.
 No OAuth round-trip, and the key's level applies, up to Full access:
 
 ```bash
-claude mcp add --transport http --scope user membase https://api.app.membase.io/mcp-http \
+claude mcp add --transport http --scope user membase https://api.app.membase.com/mcp-http \
   --header "Authorization: Bearer ${MEMBASE_API_KEY}"
 ```
 
@@ -44,7 +44,7 @@ a key created from the **Skills** tab shows only the sentence below.
 Or the skill alone, with no MCP server at all. Paste the sentence from Connect's **Skills**
 tab:
 
-> Install Membase from https://app.membase.ai/skill using key mbk_…
+> Install Membase from https://app.membase.com/skill using key mbk_…
 
 Claude Code fetches the skill folder into `~/.claude/skills/membase/`, stores the key as
 `MEMBASE_API_KEY` in the `env` block of `~/.claude/settings.json`, checks it with one call

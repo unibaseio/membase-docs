@@ -7,7 +7,7 @@ Start with one working API call sequence, then learn memory operations, integrat
 
 Use Membase from code to add material to a person's memory and retrieve it for your app.
 Calls use that person's developer key and the Memories they grant it. Python, TypeScript
-and REST all reach the same service at `https://api.app.membase.io`.
+and REST all reach the same service at `https://api.app.membase.com`.
 
 **Start with the [quickstart](/build/getting-started/api-quickstart/).** It creates one document, waits for learning
 to finish, and searches the result. The example includes the checks needed to distinguish an

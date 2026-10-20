@@ -40,7 +40,7 @@ response = client.beta.messages.create(
     betas=["mcp-client-2025-11-20"],
     mcp_servers=[{
         "type": "url",
-        "url": "https://api.app.membase.io/mcp-http",
+        "url": "https://api.app.membase.com/mcp-http",
         "name": "membase",
         "authorization_token": os.environ["MEMBASE_API_KEY"],
     }],
@@ -72,7 +72,7 @@ const response = await client.beta.messages.create({
   betas: ["mcp-client-2025-11-20"],
   mcp_servers: [{
     type: "url",
-    url: "https://api.app.membase.io/mcp-http",
+    url: "https://api.app.membase.com/mcp-http",
     name: "membase",
     authorization_token: process.env.MEMBASE_API_KEY!,
   }],

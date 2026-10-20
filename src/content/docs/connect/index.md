@@ -30,7 +30,7 @@ The account owner can change or revoke either connection from the
 Paste this into your client’s remote MCP setup:
 
 ```text
-https://api.app.membase.io/mcp-http
+https://api.app.membase.com/mcp-http
 ```
 
 The transport is Streamable HTTP. Supported clients open a browser for consent; the
@@ -41,7 +41,7 @@ key in an Authorization header, with the permissions of that key.
 
 Tell the AI:
 
-> Install Membase from https://app.membase.ai/skill using key mbk_…
+> Install Membase from https://app.membase.com/skill using key mbk_…
 
 That address is the skill's `SKILL.md` with an install preamble. The AI fetches the folder,
 keeps the key as `MEMBASE_API_KEY` and calls the REST API with it. Connect's **Skills** tab

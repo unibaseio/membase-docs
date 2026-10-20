@@ -18,7 +18,7 @@ agent can take the skill as well.
 `.cursor/mcp.json` in the project, or `~/.cursor/mcp.json` for every project:
 
 ```json
-{ "mcpServers": { "membase": { "url": "https://api.app.membase.io/mcp-http" } } }
+{ "mcpServers": { "membase": { "url": "https://api.app.membase.com/mcp-http" } } }
 ```
 
 Open **Customize** in the sidebar, enable Membase and complete the OAuth prompt: the browser
@@ -32,7 +32,7 @@ Add the header; the key's level applies, up to Full access:
 
 ```json
 { "mcpServers": { "membase": {
-    "url": "https://api.app.membase.io/mcp-http",
+    "url": "https://api.app.membase.com/mcp-http",
     "headers": { "Authorization": "Bearer mbk_…" } } } }
 ```
 
