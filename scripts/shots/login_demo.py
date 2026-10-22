@@ -1,11 +1,13 @@
 """Create or refresh the docs demo account's session on a deployment.
 
-The demo account is a disposable wallet account. Its private key and current session are kept
+The demo account is a disposable wallet account. `--base-url` defaults to PRODUCTION
+(https://app.membase.com): without it, the account is created and signed in on the live
+service. Pass a staging origin to work there instead. Its private key and current session are kept
 in one JSON file OUTSIDE the repo (default ~/.membase-docs-demo.json, override with
 MEMBASE_DOCS_DEMO). Run this when the session has expired (two weeks) or to mint a fresh
 account; then `seed_demo.py` to populate it and `capture.py --base-url … --session …` to shoot.
 
-    python3 docs/user-guide/shots/login_demo.py [--base-url https://app.membase.com] [--new]
+    python3 scripts/shots/login_demo.py [--base-url https://app.membase.com] [--new]
 """
 
 from __future__ import annotations

@@ -11,10 +11,11 @@ Every scheduled task in one place.
 
 The page has **Calendar** and **List** tabs; the **List** tab holds **New schedule**. A memory's cadence,
 set in its Settings, appears here; so does any agent you put on a schedule. Each row offers
-**Pause** / **Resume**, **Edit cadence** and **Run now**, so you retune a live cadence here
-without touching the memory. Pausing is how a memory's or workflow's schedule stops: it has no
-delete verb, so the row says *paused* rather than pretending it is gone. A job the agent created
-for itself has **Delete** instead (“Delete this agent schedule? This cannot be undone.”).
+**Pause** / **Resume**, **Edit cadence** and **Run now**. **Edit cadence** takes effect at once,
+but the next deploy of the agent's canvas restores the canvas's own schedule. Pausing is how a
+memory's or workflow's schedule stops: it has no delete verb, so the row says *paused* rather
+than pretending it is gone. A job the agent created for itself has
+**Delete** instead (“Delete this agent schedule? This cannot be undone.”).
 
 Cadences are picked, not typed: hourly, daily, weekly, monthly, or Custom cron. Times are UTC.
 

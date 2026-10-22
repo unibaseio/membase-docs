@@ -55,7 +55,7 @@ can do, which Memories it uses, remove it, and what to do when something looks w
 
 | Page | For |
 |---|---|
-| [ChatGPT](/connect/clients/chatgpt/) | the Plugins dialog, Developer mode if ChatGPT asks for it, per-chat enabling |
+| [ChatGPT](/connect/clients/chatgpt/) | the Plugins dialog (account and workspace policies apply), `@` in a new conversation |
 | [Claude](/connect/clients/claude/) | the custom connector on claude.ai and the desktop app |
 | [Claude Code](/connect/clients/claude-code/) | `claude mcp add`, a key in the header, the skill |
 | [Cursor](/connect/clients/cursor/) | `mcp.json`, project or global |

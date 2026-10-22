@@ -16,18 +16,20 @@ Memories you switch on for it. For Claude Code, the command-line agent, see
 
 ## Set up
 
-1. **Customize → Connectors → + Add → Add custom connector**.
+1. **Customize → Connectors**, then the add option → **Custom** → **Web**.
 2. Paste `https://api.app.membase.com/mcp-http` and confirm.
 3. Finish the authorization in the browser. On Membase's consent screen tick the Memories Claude may use and, if it may read the profile, **Profile access**; press **Approve access**. The last page you should see is Claude's own; if you end up on Membase instead, Claude did not receive the code: retry the connection from Claude.
 4. In a chat, open **+ → Connectors** and switch Membase on, then ask *"List my Membase containers."*
 
 ## With a developer key
 
-The custom connector form has **Request headers**, for credentials Claude sends on every
-request. Add a header named `Authorization` with the value `Bearer mbk_…`: a valid key passes
-without the consent screen, and the key's level and reach apply, up to Full access. On Team and
-Enterprise a header the Owner sets is shared by every member, so give that connector a key that
-reaches only what all of them may use.
+Request-header authentication is a beta that Claude offers to a limited set of organizations;
+if the custom connector form shows no **Request headers** section, use the consent path above.
+Where it is offered, choose **No sign-in** for authentication (a header named `Authorization`
+cannot be set on an OAuth connection), then add `Authorization` with the value `Bearer mbk_…`.
+A valid key passes without the consent screen, and the key's level and reach apply, up to Full
+access. The authentication settings cannot be edited after the connector is added: to change
+the key, remove the connector and add it again.
 
 ## What it can do
 
@@ -57,5 +59,5 @@ Membase's Connect too, or **Revoke…** the key: the client does not tell the se
 | *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on Claude's page in Connect |
 | the last step lands on the Membase app | Claude did not receive the authorization code | retry the connection from Claude |
 | the model says a Memory "could not answer yet" | the memory was asleep; the first search wakes it | ask again in a moment |
-| the connector with a key in **Request headers** cannot connect | the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request | mint a new key and update the header |
+| the connector with a key in **Request headers** cannot connect | the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request | mint a new key, remove the connector and add it again with the new key |
 | the model answers from nothing about you | **Profile access** was not ticked at consent | **Disconnect…** on Claude's page in Connect, add the connector again and tick it |

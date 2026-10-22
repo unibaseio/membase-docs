@@ -12,8 +12,8 @@ Home. To give Claude or another external AI access to memory, use [Connect](/use
 
 ## Create and edit an agent
 
-1. Open **Agents** and press **Create agent**. Creation scaffolds a workflow and opens it in
-   Studio.
+1. Open **Agents** and press **Create agent**. Studio opens an unsaved draft, *Untitled agent*;
+   nothing is created until its first **Save**.
 2. Set its instructions and the workflow it should run. [Studio](/use/advanced/studio/) explains the
    canvas and the difference between saving a draft and deploying a version.
 3. Save the draft. Return to **Agents** and open the agent's row to see its controls and

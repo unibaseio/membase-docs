@@ -21,6 +21,7 @@ up as literal text, image paths break, titles appear twice. Every push to `main`
 | Section home page | `src/content/docs/<section>/index.md` → `/<section>/` |
 | Sidebar (order + labels) | `astro.config.mjs` → `sidebar` — **every new page must be added** |
 | Images | `public/images/…`, referenced as `/images/…` |
+| Screenshot tooling | `scripts/shots/` (`capture.py`, `check.py`, `manifest.json`; needs a membase-suites checkout in `MEMBASE_SUITES`) — never under `public/`, which is published |
 
 ## Page template
 

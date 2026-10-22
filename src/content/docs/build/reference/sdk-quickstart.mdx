@@ -195,7 +195,8 @@ client.documents.delete("srcitem_…", confirm=True)
 
 client.memories.add("We settled on Postgres.", container="mv-…")   # a note the Memory reads
 client.memories.add("The user prefers dark mode.", static=True)     # a standing fact → the profile
-client.memories.forget("12", container="mv-…", confirm=True)
+fact = client.profile()["dynamic"][0]                             # a profile fact: {id, content, updated_at}
+client.memories.forget(str(fact["id"]), confirm=True)               # no container: the profile's store
 
 client.rules()                                  # the user's standing rules for this credential
 ```
@@ -215,7 +216,8 @@ await client.documents.delete("srcitem_…", { confirm: true });
 
 await client.memories.add({ content: "We settled on Postgres.", container: "mv-…" });
 await client.memories.add({ content: "The user prefers dark mode.", static: true });
-await client.memories.forget("12", { container: "mv-…", confirm: true });
+const { dynamic } = await client.profile();                          // profile facts: {id, content, updated_at}
+await client.memories.forget(String(dynamic[0].id), { confirm: true }); // no container: the profile's store
 
 await client.rules();
 ```
@@ -225,6 +227,12 @@ await client.rules();
 
 </Tabs>
 
+
+`memories.add` answers a `memory_id` that is the note's document id: remove a note with
+`documents.delete`, not `memories.forget`. `memories.forget` takes the `id` of a profile fact
+from `profile()`'s `dynamic` list, with no `container`. A Memory's own learned facts have no
+ids the API returns: there is currently no way to list a container's memory ids, so they
+cannot be forgotten from code.
 
 `delete` and `forget` need a key at **Full access**. Without `confirm` they do not fail: the
 answer is `status: confirmation_required` with a `how` sentence to relay to the person. Pass
@@ -243,7 +251,7 @@ One class per HTTP status, all carrying the API's error envelope: `code` (which 
 | 404 | `NotFoundError` | an unknown document or memory id |
 | 409 | `ConflictError` | a conflicting write; retried automatically, then raised |
 | 422 | `UnprocessableEntityError` | `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Also `code: validation` for a malformed body (a missing or mistyped required field), so read `code`, not only the status |
-| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. `search` does not raise it and `add` never does |
+| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. The per-token limiter covers every call, `search` and `add` included; the two-turn cap does not reach them. `add` and `memories.add` also raise it with `code: quota_exceeded` when the account's storage is full or its plan is not active; retrying does not help |
 | 5xx | `InternalServerError` | retried automatically, then raised |
 | — | `APIConnectionError`, `APITimeoutError` | the request never got an answer |
 
@@ -306,14 +314,16 @@ try {
 | `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` (REST only, not an MCP tool) | Read |
 | `documents.delete(id, confirm=True)` | `DELETE /v1/documents/{id}` | `delete_document` | Full access |
 | `memories.add(content, container=…, static=…)` | `POST /v1/memories` | `add_memory` | Read & write |
-| `memories.forget(id, container=…, confirm=True)` | `DELETE /v1/memories/{id}` | `forget_memory` | Full access |
+| `memories.forget(id, confirm=True)` | `DELETE /v1/memories/{id}` | `forget_memory` | Full access |
 
 The MCP server offers the same operations under the protocol tool names, so a model that
 learned `search_memories` in Claude is calling what your code calls `search`.
 
 ## Without the SDK
 
-Any HTTP client works, and the OpenAPI document generates a typed client in any language:
+Any HTTP client works. The OpenAPI document types the request bodies only: every response is
+an untyped JSON object, and it names no server or auth scheme, so set the base URL
+(`https://api.app.membase.com`) and the `Authorization: Bearer` header yourself:
 
 ```bash
 npx openapi-typescript https://app.membase.com/plugin/openapi/agent-protocol.json -o membase.d.ts

@@ -18,7 +18,7 @@ call; nothing here depends on the client behaving.
 | Reach | the Memories ticked on consent, switchable later | the Memories ticked on the key, or all including later ones |
 | Profile | when **Profile access** was ticked on the consent screen | when **Your profile** was ticked |
 | Confirmation | is not offered a delete or forget at all | can, with `confirm=true` at Full access |
-| Ends | **Disconnect…** on the app's page, or per credential under **Approvals** | **Revoke…**, or expiry |
+| Ends | **Disconnect…** on the app's page, per credential under **Approvals**, or expiry after 90 days (the tile then says *Approval expired · authorize again*) | **Revoke…**, or expiry |
 
 An app that needs to write does not get a wider consent; the person mints a key for it
 instead, and the key says how wide.

@@ -64,8 +64,9 @@ model source in its settings.
 When a model is unavailable, stored memory remains, but learning or search may fail. A turn
 can return `422` with `code: capability_unavailable`; search may instead report an error for
 each affected Memory in `containers[].error`. A document can remain unread until the issue
-is resolved and learning completes. A free-plan account may report `reason: dormant` after
-its free allowance is used. Follow the returned recovery guidance.
+is resolved and learning completes. A free-plan account whose free allowance is used gets the
+same `422 · capability_unavailable`, with `details.reason: "dormant"`. Follow the returned
+recovery guidance.
 
 ## Access and confirmation
 

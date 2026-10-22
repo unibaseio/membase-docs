@@ -125,7 +125,7 @@ using it in Claude Code, Codex, Cursor or Kimi Code is on each client's page und
 
 ![A key's page](/images/shots/developer-key-page.png)
 
-- **Access** (1) — change the level with the segmented control; the tools it now holds are listed under it. The change applies on the key's next call; the token stays the same.
+- **Access** (1) — change the level with the segmented control; the tools it now holds are listed under it. The token stays the same. Lowering the level applies on the key's next call, and so does raising **Read & write** to **Full access**. Raising a **Read** key to **Read & write** or **Full access** does not give it write access yet: its writes are still refused, so create a new key at the higher level instead.
 - **Memory access** (2) — a switch per memory, one for *All memories, including ones you make later*, and one for *Your profile*. Off takes effect on the key's next call.
 - **Expiry** (3) — when the token stops working. It cannot be extended; to change it, rotate.
 - **Usage** (4) — calls in the last 30 or 7 days, how many were **refused** (the key asked for a memory or a verb it does not have), and the tool it calls most.

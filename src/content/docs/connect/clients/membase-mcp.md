@@ -13,7 +13,8 @@ One URL for every client. Streamable HTTP, JSON responses, with or without a tra
 (both answer the same; what fails is a wrong path such as `/mcp`). The server
 speaks the current MCP specification and advertises its authorization the standard way, so
 a client that can add "a remote MCP server with OAuth" can add Membase without a special
-step.
+step. The SDK also ships a local stdio server, `membase --local mcp` (from
+`unibaseio-membase[local]`); see the [SDK quickstart](/build/reference/sdk-quickstart/).
 
 ## Two ways to authenticate
 

@@ -1,12 +1,14 @@
 """Populate the docs demo account with realistic material, then learn it for real.
 
-The demo account is a disposable wallet account on staging. Its session lives OUTSIDE the repo
-in a JSON file ({base, cookie, csrf, account_id, key}); `login_demo.py` creates or refreshes it.
+The demo account is a disposable wallet account. Its session lives OUTSIDE the repo in a JSON
+file ({base, cookie, csrf, account_id, key}); `login_demo.py` creates or refreshes it. This
+script writes to whatever deployment that file's `base` names — PRODUCTION
+(https://app.membase.com) unless login_demo.py was given another --base-url.
 Everything here goes through the public API as that account: Files (folders and files), two
 memories, two folder sources, a real learning run per memory and two real assistant turns —
 so the screenshots show what a person would actually see.
 
-    MEMBASE_DOCS_DEMO=~/.membase-docs-demo.json python3 docs/user-guide/shots/seed_demo.py [--no-run]
+    MEMBASE_DOCS_DEMO=~/.membase-docs-demo.json python3 scripts/shots/seed_demo.py [--no-run]
 
 `--no-run` seeds files, memories and sources only (no model turns).
 """

@@ -10,7 +10,7 @@ runs commands, so it can take the skill as well.
 
 ## Before you start
 
-* Kimi Code CLI 2.x. It has no `kimi mcp` command: MCP servers are declared in `mcp.json`, or added with `/mcp-config` inside a session.
+* Kimi Code CLI. It has no `kimi mcp` command: MCP servers are declared in `mcp.json`, or added with `/mcp-config` inside a session.
 * For a write-capable connection, a developer key from **Connect › Developer keys › Create key**.
 
 ## Set up
@@ -30,8 +30,7 @@ session is open joins only the sessions started after it. In a new session run:
 ```
 
 The browser opens Membase's consent screen. Tick the Memories Kimi Code may use and, if it may
-read the profile, **Profile access**. Kimi Code keeps the token under
-`~/.kimi-code/credentials/mcp/`, and `/mcp` shows the server's connection status. Kimi Code has
+read the profile, **Profile access**. `/mcp` shows the server's connection status. Kimi Code has
 no tile of its own in Connect's client catalog: it appears under **Other apps** once the consent
 completed.
 
@@ -66,8 +65,7 @@ the Memory.
 
 Delete the `membase` entry from `mcp.json`, or remove it with `/mcp-config`; sessions already
 open list it as `removed` until they end. Then **Disconnect…** on Kimi Code's page in Connect or
-**Revoke…** the key. The consent token stays under `~/.kimi-code/credentials/mcp/` until you
-delete it there, but it stops working once you disconnect.
+**Revoke…** the key. A consent token Kimi Code still holds stops working once you disconnect.
 
 ## If something looks wrong
 

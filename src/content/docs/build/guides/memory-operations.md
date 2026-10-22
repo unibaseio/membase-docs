@@ -92,8 +92,10 @@ client.memories.add("The user prefers dark mode.", static=True)                 
 ```
 
 A note is raw material, and this call attempts to start its learning run asynchronously: it
-answers with `memory_id`, `document_id`, `status: "queued"` and `learning_run`. Use the
-`document_id` and the same polling as a document write; acceptance is not completion. A
+answers with `memory_id`, `document_id`, `status: "queued"` and `learning_run`. The
+`memory_id` is the note's document id, not a fact id: to remove the note, pass it to
+`delete_document`, not `forget_memory`. Use the `document_id` and the same polling as a
+document write; acceptance is not completion. A
 standing fact about the person (`static=True`) goes to the profile instead of any Memory,
 and is recorded synchronously: the answer is `{"static": true, "status": "recorded",
 "run_id", "content"}`, with no document and nothing to poll. Over REST `POST /v1/memories`
@@ -142,9 +144,10 @@ A document is one piece of raw material a Memory has read or will read: a file i
 source, an uploaded file, a Notion page, a conversation the browser extension captured, or
 what `add_document` handed in. `learned` is false until a run has committed it; it is the flag
 to poll after `add_document`. It is computed per source, not per document: true when the
-Memory's last successful run is at or after the source's current version. So when a new file
-lands in the same upload folder, every document in that folder reads `learned: false` again
-until the next run.
+Memory's last successful run is at or after the source's current version, under the
+Memory's current instruction. So when a new file lands in the same upload folder, every
+document in that folder reads `learned: false` again until the next run, and changing the
+Memory's instruction makes every document in it read `learned: false` until it has run again.
 
 ### Sync and run are two different things
 
@@ -185,9 +188,16 @@ only over MCP on a credential that exposes one.
 ## Forget and delete
 
 ```python
-client.memories.forget("12", container=decisions["id"], confirm=True)
+fact = client.profile()["dynamic"][0]                  # a profile fact: {id, content, updated_at}
+client.memories.forget(str(fact["id"]), confirm=True)    # no container: the profile's store
 client.documents.delete("srcitem_…", confirm=True)
 ```
+
+`forget_memory` takes the `id` of a profile fact, from `get_profile`'s `dynamic` list, with
+no `container`. A Memory's own learned facts have no ids the API returns: search results
+name their container, not a fact, and there is currently no way to list a container's memory
+ids, so they cannot be forgotten from code. A note added with `add_memory` is a document;
+remove it with `delete_document`.
 
 Both need a Full access key, and even then they do not run on a bare call: without
 `confirm=true` the answer is `200` with `status: confirmation_required` and a `how` sentence
@@ -220,7 +230,7 @@ AI about behaving beneath the ceiling the server enforces.
 | removes a source | its documents stop being listed; what was learned stays until the Memory is deleted |
 | deletes the Memory | it is no longer listed; searches no longer answer from it |
 | has no working model for its agent | a failed turn, surfaced as `422 · capability_unavailable` or a search entry in `containers[].error`; stored memory remains, documents may wait unread. Read `code` on a `422`: `validation` there is a malformed body, not a model problem |
-| is on the free plan with its free turns spent | `422 · reason: dormant` until they bring a model or move to a paid plan |
+| is on the free plan with its free turns spent | `422 · capability_unavailable` with `details.reason: "dormant"` until they bring a model or move to a paid plan |
 | already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits `add_memory` with `static`, `forget_memory` and `ask_agent` (search is not held to it; `add_document` defers its learning instead, with `learning_run` null); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
 
 ## Rules of the road

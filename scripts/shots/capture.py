@@ -1,12 +1,14 @@
 """Regenerate every user-guide screenshot from the built SPA against a fresh local instance.
 
-Run from the repo root (build the SPA first: `cd apps/product-web && npm run build`):
+The browser harness and the SPA live in a membase-suites checkout, not in this repo: point
+MEMBASE_SUITES at it and run from its root (build the SPA first: `cd apps/product-web && npm run
+build`). Images are written to this repo's public/images/shots/, the manifest next to this script.
 
-    PYTHONPATH=src:packages:. python3 docs/user-guide/shots/capture.py [shot-id ...]
+    cd "$MEMBASE_SUITES" && PYTHONPATH=src:packages:. python3 <docs>/scripts/shots/capture.py [shot-id ...]
 
-Against a real deployment (the demo account, populated by the seed script — see CONTRIBUTING.md):
+Against a real deployment (the demo account, populated by seed_demo.py in this folder):
 
-    PYTHONPATH=src:packages:. python3 docs/user-guide/shots/capture.py \
+    cd "$MEMBASE_SUITES" && PYTHONPATH=src:packages:. python3 <docs>/scripts/shots/capture.py \
         --base-url https://app.membase.com --session ~/.membase-docs-demo.json --view "Lumen project"
 
 Each shot is declared once in SHOTS: a route, what to wait for, optional clicks, and the
@@ -23,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -32,15 +35,30 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+HERE = Path(__file__).resolve().parent  # scripts/shots: these scripts and manifest.json
+OUT = HERE.parents[1] / "public" / "images" / "shots"  # the published images
+
+
+def _suites() -> Path:
+    """The membase-suites checkout that holds the SPA and the browser harness (MEMBASE_SUITES)."""
+    raw = os.environ.get("MEMBASE_SUITES", "")
+    root = Path(raw).expanduser().resolve() if raw else None
+    if not root or not (root / "tests" / "test_ui_browser.py").is_file():
+        raise SystemExit(
+            "capture.py needs a membase-suites checkout: set MEMBASE_SUITES to its root "
+            f"(got {raw or 'nothing'}; expected tests/test_ui_browser.py under it)"
+        )
+    return root
+
+
+ROOT = _suites()
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
 
 from playwright.sync_api import sync_playwright  # noqa: E402
 from test_ui_browser import _LOCAL, _Server, _wait_shell  # noqa: E402
 
-OUT = Path(__file__).resolve().parent
-sys.path.insert(0, str(OUT))  # login_demo, for refreshing the demo session
+sys.path.insert(0, str(HERE))  # login_demo, for refreshing the demo session
 VIEWPORT = {"width": 1440, "height": 900}
 BRAND = "#3e61ff"
 
@@ -290,7 +308,7 @@ def seed(page, ctx):
     base = ctx["base"]
     if ctx.get("remote"):
         # A real account: nothing is created here. The demo account is populated by the seed
-        # script (see CONTRIBUTING.md); this only looks up what to point the shots at.
+        # script (seed_demo.py in this folder); this only looks up what to point the shots at.
         views = _json(base + "/v1/memory-views")["views"]
         by_name = {v["name"]: v for v in views}
         pick = by_name.get(ctx.get("view_name") or "") or (views[0] if views else None)
@@ -809,9 +827,9 @@ def main(argv: list[str]) -> int:
         "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "shots": {},
     }
-    if only and (OUT / "manifest.json").exists():
+    if only and (HERE / "manifest.json").exists():
         # A partial re-capture keeps the other shots' records.
-        manifest["shots"] = json.loads((OUT / "manifest.json").read_text()).get("shots", {})
+        manifest["shots"] = json.loads((HERE / "manifest.json").read_text()).get("shots", {})
     failures: list[str] = []
     try:
         with sync_playwright() as pw:
@@ -888,7 +906,8 @@ def main(argv: list[str]) -> int:
                     failures.append(f"{shot.id}: {str(e)[:200]}")
                     print("  FAILED", str(e)[:200])
                     try:  # what the page looked like when the step gave up
-                        page.screenshot(path=str(OUT / f"{shot.id}.fail.png"))
+                        # Next to the script, not in public/: a failure shot is never published.
+                        page.screenshot(path=str(HERE / f"{shot.id}.fail.png"))
                     except Exception:  # noqa: BLE001
                         pass
                 finally:
@@ -898,7 +917,7 @@ def main(argv: list[str]) -> int:
         if srv:
             srv.close()
     manifest["source"] = base if remote else "local"
-    (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (HERE / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     if failures:
         print("\nproblems:")
         for f in failures:

@@ -29,13 +29,8 @@ extension* and *Authenticate*. A server added on one side appears on the other.
 
 ## With a developer key
 
-Have Codex send the key from an environment variable instead of logging in:
-
-```bash
-codex mcp add membase --url https://api.app.membase.com/mcp-http --bearer-token-env-var MEMBASE_API_KEY
-```
-
-which writes this to `~/.codex/config.toml`:
+Have Codex send the key from an environment variable instead of logging in. In
+`~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.membase]
@@ -44,9 +39,9 @@ bearer_token_env_var = "MEMBASE_API_KEY"
 ```
 
 Codex reads the variable from the environment it starts in, so `export MEMBASE_API_KEY=mbk_…`
-in your shell profile; `codex mcp list` then shows *Bearer token* under Auth. The key's level
-applies, up to Full access. `http_headers` (static values) and `env_http_headers` (values taken
-from environment variables) under the same table set other headers. The snippet Membase serves
+in your shell profile. The key's level applies, up to Full access. `http_headers` (static
+values) and `env_http_headers` (values taken from environment variables) under the same table
+set other headers. The snippet Membase serves
 at `https://app.membase.com/plugin/clients/codex.toml` is the server alone, without the key line.
 
 Or the skill:

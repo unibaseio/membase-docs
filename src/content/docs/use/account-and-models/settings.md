@@ -22,8 +22,9 @@ plans and their terms. Check the confirmation before making a payment or changin
 - An upgrade applies after payment succeeds.
 - A scheduled downgrade keeps the current plan until the date shown. **Keep current plan**
   cancels that scheduled change.
-- **Cancel subscription** keeps the paid plan through its current period. The page shows the
-  period end and any pending change.
+- **Cancel subscription** stops renewal and pauses metered usage at once. The paid period's
+  storage is kept until it ends, with no refund for the rest of it. The page shows the period
+  end and any pending change.
 - If usage exceeds the new storage quota, additional writes may be blocked. Files are not
   automatically compressed to fit. Export data you want to keep before removing files.
 

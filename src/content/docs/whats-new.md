@@ -7,6 +7,11 @@ New features and significant product changes, newest first.
 
 ## October 2026
 
+**membase.com (20 Oct).** The docs are at docs.membase.com, the web app at
+[app.membase.com](https://app.membase.com) and the API at `https://api.app.membase.com`. The
+`.ai` and `.io` web addresses redirect there; `https://api.app.membase.ai` and
+`https://api.app.membase.io` keep serving the same API.
+
 **SDK packages renamed (11 Oct).** The Python SDK is now `unibaseio-membase` on PyPI and the
 TypeScript SDK `@unibaseio/membase` on npm, both from 0.3.0. The Python package includes the
 `membase` command line; `@unibaseio/membase-cli` provides the same command for the hosted API
@@ -14,11 +19,6 @@ without Python. `pip install 'unibaseio-membase[local]'` adds an MCP server (`me
 and, on Python 3.12 or 3.13, runs the memory engine on your machine: `Membase(local=True)` in
 Python, or `membase --local serve` for the same API over local HTTP.
 [SDKs](/build/reference/sdk-quickstart/).
-
-**membase.com (20 Oct).** The docs are at docs.membase.com, the web app at
-[app.membase.com](https://app.membase.com) and the API at `https://api.app.membase.com`. The
-`.ai` and `.io` web addresses redirect there; `https://api.app.membase.ai` and
-`https://api.app.membase.io` keep serving the same API.
 
 **Documentation moved (9 Oct).** These docs moved to their own site.
 

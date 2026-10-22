@@ -1,5 +1,5 @@
 # Builds the Starlight site and publishes it to GitHub Pages:
-# https://docs.membase.ai/
+# https://docs.membase.com/
 name: Deploy docs
 
 on:

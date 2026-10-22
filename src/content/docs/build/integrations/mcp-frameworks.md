@@ -28,8 +28,10 @@ patterns.
 
 ## Without an SDK
 
-Any HTTP client works. The OpenAPI document generates TypeScript types (pair them with
-`openapi-fetch` for a typed client), or a client for another language with OpenAPI Generator:
+Any HTTP client works. The OpenAPI document generates TypeScript types, or a client for
+another language with OpenAPI Generator. It types the request bodies only: every response is
+an untyped JSON object, and it names no server or auth scheme, so set the base URL
+(`https://api.app.membase.com`) and the `Authorization: Bearer` header by hand:
 
 ```bash
 curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json
