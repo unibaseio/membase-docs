@@ -55,13 +55,13 @@ can do, which Memories it uses, remove it, and what to do when something looks w
 
 | Page | For |
 |---|---|
-| [ChatGPT](/connect/clients/chatgpt/) | the Plugins dialog, Developer mode if ChatGPT asks for it, per-chat enabling |
+| [ChatGPT](/connect/clients/chatgpt/) | the Plugins dialog (account and workspace policies apply), `@` in a new conversation |
 | [Claude](/connect/clients/claude/) | the custom connector on claude.ai and the desktop app |
 | [Claude Code](/connect/clients/claude-code/) | `claude mcp add`, a key in the header, the skill |
 | [Cursor](/connect/clients/cursor/) | `mcp.json`, project or global |
 | [Codex](/connect/clients/codex/) | `codex mcp add`, `config.toml`, the IDE extension |
 | [Grok](/connect/clients/grok/) | a custom connector on grok.com; no tile of its own, listed under **Other apps** after consent |
-| [Kimi Code](/connect/clients/kimi-code/) | `kimi mcp add`; no tile of its own, listed under **Other apps** after consent |
+| [Kimi Code](/connect/clients/kimi-code/) | `mcp.json` and `/mcp-config`; no tile of its own, listed under **Other apps** after consent |
 | [Any MCP client](/connect/clients/membase-mcp/) | the server itself: discovery, the header alternative, what `tools/list` shows, the ready-made config files, VS Code, Windsurf, Devin and every client without a page |
 | [Access control](/connect/manage-access/access-control/) | consent vs key, reach, the profile tick, confirmation, revocation |
 | [Troubleshooting](/connect/manage-access/troubleshooting/) | every word and status a client can show, and what to do |
@@ -82,5 +82,5 @@ the user guide.
 ## Related tasks
 
 - To import conversations into memory, use the [browser extension](/use/bring-your-material-in/browser-extension/).
-- To talk to Membase's own assistant from your phone, use [Telegram](/use/use-your-assistant/telegram/).
+- To talk to your Membase assistant from Telegram, with your own bot, see [Telegram](/use/use-your-assistant/telegram/).
 - To build your own integration, use the [API quickstart](/build/getting-started/api-quickstart/).

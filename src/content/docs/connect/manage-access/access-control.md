@@ -18,7 +18,7 @@ call; nothing here depends on the client behaving.
 | Reach | the Memories ticked on consent, switchable later | the Memories ticked on the key, or all including later ones |
 | Profile | when **Profile access** was ticked on the consent screen | when **Your profile** was ticked |
 | Confirmation | is not offered a delete or forget at all | can, with `confirm=true` at Full access |
-| Ends | **Disconnect…** on the app's page, or per credential under **Approvals** | **Revoke…**, or expiry |
+| Ends | **Disconnect…** on the app's page, per credential under **Approvals**, or expiry after 90 days (the tile then says *Approval expired · authorize again*) | **Revoke…**, or expiry |
 
 An app that needs to write does not get a wider consent; the person mints a key for it
 instead, and the key says how wide.
@@ -31,25 +31,27 @@ and the **Memory access** switches on a key's page. Off takes effect on the very
 
 ![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means 403 and not listed on the next call](/images/figures/reach-one-switch.svg)
 
-A Memory outside the reach is refused the same way as one that does not exist: `403`,
-*may not use that container*. `list_containers` does not list it. A client cannot tell
-withheld from absent, and cannot ask for more; only the person can switch it on.
+A Memory outside the reach is refused the same way as one that does not exist: *may not use
+that container* (`403` over REST, a tool error over MCP). `list_containers` does not list it.
+A client cannot tell withheld from absent, and cannot ask for more; only the person can switch
+it on.
 
 ## The tool list is the grant
 
 `tools/list` is filtered per caller. A consent-minted client is offered `list_containers`,
 `search_memories` and, when ticked, `get_profile`, and nothing that writes; a key is offered
 the tools of its level. A model cannot call what it was not offered, and a call that
-bypasses the list is refused with `403` anyway. The full table per level is on
-[Authentication & Scopes](/build/reference/authentication/#access-levels).
+bypasses the list is refused anyway: over MCP as a tool error (*token missing required scope*,
+or *not in this agent's capability profile*), over REST as `403 unauthorized`. The full table
+per level is on [Authentication & Scopes](/build/reference/authentication/#access-levels).
 
 ## Destructive verbs
 
 `delete_document` and `forget_memory` exist only at Full access, and even there they do not
 execute on a bare call: without `confirm=true` the answer is `status: confirmation_required`
 with a `how` sentence for the model to relay. A consent-minted client is never offered
-these verbs, and a call is refused with `403` (*not in this agent's capability profile*)
-rather than answered with the sentence. From a Full access key, `confirm=true` counts as
+these verbs, and a call is refused (a tool error, *token missing required scope*; `403` over
+REST) rather than answered with the sentence. From a Full access key, `confirm=true` counts as
 the owner's confirmation, which is why the skill tells the AI to pass it only after the
 person agreed.
 

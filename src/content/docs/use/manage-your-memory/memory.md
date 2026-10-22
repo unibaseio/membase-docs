@@ -35,11 +35,12 @@ The Assistant's own memory is always the first tile. The home page lists the Mem
 
 Under the Add card:
 
-- **Your Memory.** What this memory currently knows: search, a kind filter, one list of pages
-  and facts. Click an item to read it in the right column.
+- **Your memory.** What this memory currently knows: search, a kind filter and the list. Once
+  the memory has memory files, the list splits into two lanes, **Memory entries** and **Memory
+  files**. Click an item to read it in the right column.
 - **Use in.** One switch per app you have connected. **Connect an app** when there is none.
 
-![Your Memory with one item opened](/images/shots/memory-entry.png)
+![Your memory with one item opened](/images/shots/memory-entry.png)
 
 1. **An item.** One thing the memory keeps, with its kind and when it was last updated. The
    list contains what the Memory learned and any corrections you made through **Edit**.
@@ -54,7 +55,7 @@ The line under the name is the memory's state and nothing else:
 |---|---|
 | *Not run yet* | never run |
 | *Checking…* | the page is reading the state |
-| *Running…* | a run is queued or running; survives a reload |
+| *thinking… 8s*, then *Running · 20s* | a run is queued or running, with the time since it started; survives a reload |
 | *Updated 3h ago · Report* | the last run read the current sources; **Report** opens what it did |
 | *Run failed* | the last run failed; open the report, fix, run again |
 | *Run refused* | the last run was refused before it did any work; **Report** says why |
@@ -72,12 +73,17 @@ memory, cannot make this memory look up to date.
 Every field saves as it changes. There is no Save button. The dialog has its own **Update now**
 at the top.
 
-1. **Memory.** **Name**, and **Instructions**: what the memory keeps. For a memory over your
-   conversations, the instructions filter what the chats say, they are not a subject to write about.
-2. **Sources.** What this memory reads; each row opens the source's page.
-3. **Schedule.** *Manual* until you **Add schedule**; then **Change**, **Pause** and **Resume**.
-   Cadences are picked, not typed: hourly, daily, weekly, monthly, or a custom cron. Times are in
-   UTC; the picker shows your local equivalent.
+The **Memory** section starts with the **Name**.
+
+1. **Instructions.** What the memory keeps. For a memory over your conversations, the
+   instructions filter what the chats say, they are not a subject to write about.
+2. **Schedule.** *Manual* until you **Add schedule**; then **Change**, **Pause** and **Resume**.
+   Cadences are picked, not typed: hourly, daily, weekly, monthly, or a custom cron. Times are
+   UTC.
+
+Between them, **Sources** shows your sources as pills; a highlighted pill is one this memory
+reads. Clicking a pill adds that source to this memory or removes it, so clicking a highlighted
+pill stops this memory reading it. The pills do not open a source's page.
 
 Below: **Sharing** (apps as switches, what depends on this memory, **Sell** / **Unlist…**) and
 **Advanced** (model, skills, its agent, **Open in Studio**).
@@ -86,7 +92,7 @@ Below: **Sharing** (apps as switches, what depends on this memory, **Sell** / **
 
 ![A folder source](/images/shots/source-page.png)
 
-Each source has its own page, reached from Settings › Sources or from the Add card.
+Each source has its own page, opened from its row under the Add card.
 
 1. **Hero.** The source and its path. A folder in your Files is read in place, so there is
    nothing to sync, and **Disconnect…** is its one verb. A connector source (Notion, Unibase

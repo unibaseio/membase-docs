@@ -1,10 +1,10 @@
 {
-  "sha": "f1ae8142",
+  "sha": "c1e324a0",
   "viewport": {
     "width": 1440,
     "height": 900
   },
-  "generated": "2026-09-28T05:34:24Z",
+  "generated": "2026-10-22T02:00:28Z",
   "shots": {
     "home-empty": {
       "file": "home-empty.png",
@@ -16,7 +16,7 @@
       ],
       "wait": "[data-testid='home-entries']",
       "caption": "Home: a new conversation.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -32,7 +32,7 @@
       ],
       "wait": "[data-testid='home-entries']",
       "caption": "The Home page.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -45,7 +45,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "New memory: a name and what it keeps.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -58,7 +58,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "Memory home: one tile per memory.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -72,7 +72,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "A memory's page: Update now, Settings, and the Add card.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -88,7 +88,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "Anatomy of a memory's page.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -101,7 +101,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "Settings: what the memory extracts, and how often.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -114,7 +114,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "A folder source's page: Sync now, and which memories read it.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -128,7 +128,7 @@
       ],
       "wait": "[data-testid='connect-page']",
       "caption": "Connect, the MCP tab: the address, then the apps by purpose.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -143,7 +143,7 @@
       ],
       "wait": "[data-testid='connect-skills']",
       "caption": "The Skills tab: Create key, an existing key, downloads and the setup guide, and Manage keys.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -155,7 +155,7 @@
       ],
       "wait": "[data-testid='connect-page']",
       "caption": "Picking Claude unfolds the connector URL and its steps.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -169,7 +169,7 @@
       ],
       "wait": "[data-testid='developer-key-row']",
       "caption": "Developer keys: one row per key \u2014 name and hint, access, reach, expiry, last use.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -185,7 +185,7 @@
       ],
       "wait": "[data-testid='developer-key-new']",
       "caption": "Create a developer key: the name, the access with its tools, the reach, the expiry.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -199,7 +199,7 @@
       ],
       "wait": "[data-testid='developer-key-new']",
       "caption": "The token, once \u2014 with the places to paste it and a real test call.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -217,7 +217,7 @@
       ],
       "wait": "[data-testid='developer-key-row']",
       "caption": "A key's page: access, reach, expiry, usage and recent calls; Rotate and Revoke in the hero.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -230,9 +230,9 @@
       ],
       "wait": "[data-testid='space-browser']",
       "caption": "Files: the account's files. Any folder can become a source.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "ai-setup-page": {
       "file": "ai-setup-page.png",
@@ -240,9 +240,9 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "AI Setup: model sources.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "schedules-page": {
       "file": "schedules-page.png",
@@ -250,9 +250,9 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "Schedules.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "agents-page": {
       "file": "agents-page.png",
@@ -260,9 +260,9 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "Agents.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "activity-page": {
       "file": "activity-page.png",
@@ -270,9 +270,9 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "Activity.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "marketplace-memory": {
       "file": "marketplace-memory.png",
@@ -284,7 +284,7 @@
       ],
       "wait": "[data-testid='shell-nav']",
       "caption": "Marketplace: the Memory part, Browse tab.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -294,7 +294,7 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "List a memory: what buyers see, price and allowance.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -304,9 +304,9 @@
       "selectors": [],
       "wait": "[data-testid='builder-canvas']",
       "caption": "Studio: an agent's canvas.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
+      "source": "https://app.membase.com",
+      "sha": "c1e324a0",
+      "generated": "2026-10-22T02:00:28Z"
     },
     "marketplace-subscriptions": {
       "file": "marketplace-subscriptions.png",
@@ -314,19 +314,9 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "Marketplace \u203a Purchases & subscriptions.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
-    },
-    "telegram-dialog": {
-      "file": "telegram-dialog.png",
-      "route": "/app",
-      "selectors": [],
-      "wait": "[data-testid='home-entries'], [data-testid='conversation-row']",
-      "caption": "Connect Telegram: generate a QR and scan it with your phone.",
-      "source": "https://app.membase.ai",
-      "sha": "11dfdd79",
-      "generated": "2026-09-28T02:18:39Z"
     },
     "settings-page": {
       "file": "settings-page.png",
@@ -334,7 +324,7 @@
       "selectors": [],
       "wait": "[data-testid='shell-nav']",
       "caption": "Settings.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -380,7 +370,7 @@
       ],
       "wait": "[data-testid='home-entries'], [data-testid='conversation-row']",
       "caption": "A conversation: your question, the answer, and the tools the assistant used to find it.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -393,7 +383,7 @@
       ],
       "wait": "[data-testid='memory-home']",
       "caption": "Your Memory: what the memory keeps, and one item opened.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     },
@@ -403,7 +393,7 @@
       "selectors": [],
       "wait": "[data-testid='memory-home']",
       "caption": "A memory you subscribed to: who sells it, its access period, and how your AI reads it.",
-      "source": "https://app.membase.ai",
+      "source": "https://app.membase.com",
       "sha": "f1ae8142",
       "generated": "2026-09-28T05:34:24Z"
     }

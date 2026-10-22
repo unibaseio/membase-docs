@@ -66,8 +66,8 @@ any data you want to keep before proceeding. [Deletion and access controls](/con
 ## How is this different from searching my files?
 
 A Memory processes source material and retains information for later retrieval. Updating a
-source and updating its Memory are separate actions. See the [memory engine benchmarks](/evaluation/benchmarks/)
-for evaluation results and their scope; those measurements are separate from hosted API performance.
+source and updating its Memory are separate actions. The [benchmarks](/evaluation/benchmarks/)
+measure the local memory engine (`unibaseio-membase[local]`), not hosted Memories or the hosted API.
 
 Questions about API status codes, metadata filters or serving multiple users are covered in
 [API troubleshooting](/build/reference/troubleshooting/).

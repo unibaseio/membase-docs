@@ -45,7 +45,11 @@ listing; fetch the files by name, or take the zip.
 
 ## Without the skill
 
-Any agent can be handed the OpenAPI document instead and asked to generate a client:
+Any agent can be handed the OpenAPI document instead. It types the request bodies only: every
+response is an untyped JSON object, and it names no server or auth scheme, so the generated
+code must set the base URL (`https://api.app.membase.com`) and the `Authorization: Bearer`
+header by hand. The command below generates TypeScript types; OpenAPI Generator makes a
+client for another language:
 
 ```bash
 curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json

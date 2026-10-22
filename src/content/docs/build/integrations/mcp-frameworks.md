@@ -1,9 +1,9 @@
 ---
 title: "MCP frameworks"
-description: "An agent framework with an MCP client needs no Membase-specific code: the server URL and the key as a header, and it discovers the tools. Without a framework, the OpenAPI document generates a typed client."
+description: "An agent framework with an MCP client needs no Membase-specific code: the server URL and the key as a header, and it discovers the tools. Without a framework, the OpenAPI document generates TypeScript types or a client for another language."
 ---
 
-An agent framework with an MCP client needs no Membase-specific code: the server URL and the key as a header, and it discovers the tools. Without a framework, the OpenAPI document generates a typed client.
+An agent framework with an MCP client needs no Membase-specific code: the server URL and the key as a header, and it discovers the tools. Without a framework, the OpenAPI document generates TypeScript types or a client for another language.
 
 ## Give the framework the server
 
@@ -28,7 +28,10 @@ patterns.
 
 ## Without an SDK
 
-Any HTTP client works, and the OpenAPI document generates a typed client for any language:
+Any HTTP client works. The OpenAPI document generates TypeScript types, or a client for
+another language with OpenAPI Generator. It types the request bodies only: every response is
+an untyped JSON object, and it names no server or auth scheme, so set the base URL
+(`https://api.app.membase.com`) and the `Authorization: Bearer` header by hand:
 
 ```bash
 curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-protocol.json

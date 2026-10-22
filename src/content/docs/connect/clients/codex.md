@@ -29,24 +29,30 @@ extension* and *Authenticate*. A server added on one side appears on the other.
 
 ## With a developer key
 
-The snippet Membase serves at `https://app.membase.com/plugin/clients/codex.toml` is the
-server alone, for `~/.codex/config.toml`:
+Have Codex send the key from an environment variable instead of logging in. In
+`~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.membase]
 url = "https://api.app.membase.com/mcp-http"
+bearer_token_env_var = "MEMBASE_API_KEY"
 ```
 
-Membase writes no Codex snippet with a key in it. If your Codex build takes a static header on
-a Streamable HTTP server, add one under `[mcp_servers.membase]` with the key as
-`Authorization: Bearer mbk_…`; the setting's name is Codex's own and is not checked here, so
-the plain way to give Codex a key is the skill:
+Codex reads the variable from the environment it starts in, so `export MEMBASE_API_KEY=mbk_…`
+in your shell profile. The key's level applies, up to Full access. `http_headers` (static
+values) and `env_http_headers` (values taken from environment variables) under the same table
+set other headers. The snippet Membase serves
+at `https://app.membase.com/plugin/clients/codex.toml` is the server alone, without the key line.
+
+Or the skill:
 
 > Install Membase from https://app.membase.com/skill using key mbk_…
 
-Codex installs the folder beside `AGENTS.md`, points to it from there, and keeps the key as
-`MEMBASE_API_KEY` under `env` in its `config.toml`. With the MCP tools already present it
-uses those and keeps the skill for its rules.
+Codex installs the folder beside `AGENTS.md` and points to it from there. The key has to reach
+the commands Codex runs in later sessions: keep `MEMBASE_API_KEY` in the environment Codex
+starts from, or under `set` in `[shell_environment_policy]` in `config.toml` (its `config.toml`
+has no top-level `env` table). With the MCP tools already present it uses those and keeps the
+skill for its rules.
 
 ## What it can do
 
@@ -56,7 +62,8 @@ that writes. With a key: the key's level, up to Full access.
 ## Which Memories it uses
 
 An empty container list means no Memory is switched on for this connection. Switch one on
-under **Uses** on Codex's page in Connect, or under **Use in** on the Memory.
+under **Uses** on Codex's page in Connect (with a key: on the key's page), or under **Use in**
+on the Memory.
 
 Codex and the ChatGPT connector register with Membase under the same client name. Membase
 tells them apart and shows two tiles on Connect; each has its own **Uses** switches and its
@@ -73,5 +80,6 @@ the key.
 |---|---|---|
 | `codex mcp list` shows the server without authorization | consent not completed | `codex mcp login membase` |
 | an empty container list | connected, no Memory switched on | **Uses** on Codex's page in Connect |
-| a write is refused | the connection is consent-minted (read-only) | give Codex a Read & write key through the skill |
+| a write is refused | the connection is consent-minted (read-only), or the key is Read | give Codex a Read & write key through `bearer_token_env_var` or the skill |
+| Membase fails to connect with `bearer_token_env_var` | `MEMBASE_API_KEY` is not set where Codex starts, or the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request | export the variable; or mint a new key and update it |
 | the extension does not see the server | it was added before the extension restarted | *Restart extension*, then *Authenticate* |

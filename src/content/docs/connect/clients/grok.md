@@ -1,11 +1,11 @@
 ---
 title: "Grok"
-description: "Membase in Grok on the web, iOS and Android, as a custom connector with OAuth consent in the browser."
+description: "Membase in Grok on grok.com, as a custom connector with OAuth consent in the browser."
 ---
 
-Membase in Grok on the web, iOS and Android, as a custom connector with OAuth consent in the browser.
+Membase in Grok on grok.com, as a custom connector with OAuth consent in the browser.
 
-Grok (web, iOS and Android) takes custom MCP servers as **connectors**. The menus are the
+Grok takes custom MCP servers as **connectors**, added at `grok.com/connectors`. The menus are the
 vendor's own and move with its releases; the Membase side, the URL, the consent screen and
 the app's page on Connect, is the same as for every other client. Grok has no tile of its own
 in Connect's client catalog: it appears under **Other apps**, with a monogram, once the
@@ -39,7 +39,8 @@ integration rather than a plugin, and it works with a developer key in the serve
 An empty container list means no Memory is switched on for this connection. Switch one on
 under **Uses** on Grok's page in Connect, or under **Use in** on the Memory. Grok's page
 exists under **Other apps** on Connect once the consent completed, whatever Grok's own screen
-says; it has **Uses**, **Approvals** and **Disconnect…** like every other app.
+says; like every other app's page it has **Uses** and **Disconnect…**, and **Approvals** once
+Grok holds more than one credential.
 
 ## Remove it
 

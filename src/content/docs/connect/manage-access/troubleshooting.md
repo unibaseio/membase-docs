@@ -18,6 +18,7 @@ Look up the word on screen, or the status in the answer.
 | *The MCP address is unavailable* | the page could not ask the server for it | reload; the sentence for your AI still works |
 | my AI installed the skill but says it has no access | the skill needs a developer key | Skills tab › **Create key**, and paste the sentence |
 | a key's row says *Expired* | its token has lapsed | **⋯ › Create a similar key** |
+| an app's tile says *Approval expired · authorize again* | its consent approval lapsed: an approval lasts 90 days and is not renewed automatically, and the MCP endpoint now answers it `401 invalid_token` | run the client's login again, or remove and re-add the connector, and approve |
 | two tiles for ChatGPT and Codex | they register under one client name; Membase tells them apart | nothing |
 
 ## In the client
@@ -26,8 +27,8 @@ Look up the word on screen, or the status in the answer.
 |---|---|---|
 | the server never authorizes | the URL has a typo or a wrong path (`/mcp`, a bare domain), or the consent tab was closed | paste `https://api.app.membase.com/mcp-http` exactly; run the login again |
 | *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on the client's page, or **Use in** on the Memory |
-| the tools appear, every call is refused | the key in the header is expired or revoked | rotate it and update the file |
-| a write is refused | the connection is consent-minted (read-only), or the key is Read | mint a Read & write key and use it instead |
+| the client cannot connect, or says it needs authentication, with a key in its header | the key is unknown, expired or revoked: the MCP endpoint answers `401 invalid_token` to every request, `initialize` and `tools/list` included, so no tools load | mint a new key and update the client's configuration |
+| a write is refused (a tool error, *token missing required scope*) | the connection is consent-minted (read-only), or the key is Read | mint a Read & write key and use it instead |
 | the model says a Memory "could not answer yet" | the memory was asleep; the first search after a quiet spell wakes it | ask again in a moment |
 | the model answers from nothing about the person | the profile tick is off | an app: **Disconnect…** and authorize again with **Profile access** ticked; a key: **Your profile** on the key's page |
 | the model asks me to confirm a delete | a Full access key called delete or forget without `confirm=true` and got its `how` sentence | decide; only a Full access key can pass `confirm=true` |
@@ -37,12 +38,16 @@ Look up the word on screen, or the status in the answer.
 
 | Answer | Meaning | Do |
 |---|---|---|
-| `401` | no bearer at all | send `Authorization: Bearer …` |
-| `403 · unauthorized` | an unknown, expired or revoked token | mint a new key; do not retry with this one |
-| `403 · unauthorized · may not use that container` | the container is outside the reach, or does not exist | switch it on under **Memory access**; or list containers first |
-| `403 · unauthorized · not in this agent's capability profile` | the tool is not in this credential's list: above the key's level, or a write from a consent-minted app | raise the level, or mint a higher key |
+| `401 · unauthenticated` | REST: no bearer at all | send `Authorization: Bearer …` |
+| `401 · unauthorized` on the MCP URL | no bearer: the OAuth discovery challenge, normal before consent | complete the client's login |
+| `401 · invalid_token` on the MCP URL | an unknown, expired or revoked token; the MCP endpoint answers every request this way, `initialize` and `tools/list` included | mint a new key, or authorize the app again; do not retry with this one |
+| `403 · unauthorized` | REST: an unknown or expired token (*invalid token*), a revoked one (*token revoked or unknown*), or a suspended account (*account suspended*) | mint a new key; do not retry with this one |
+| `403 · unauthorized · may not use that container` | the container is outside the reach, or does not exist; over MCP the same text comes back as a tool error | switch it on under **Memory access**; or list containers first |
+| `403 · unauthorized · token missing required scope` | a read-only credential (consent, or a Read key) called a tool that writes; over MCP the same text comes back as a tool error | mint a Read & write key |
+| `403 · unauthorized · not in this agent's capability profile` | the tool is above this credential's grant (a key's level, or a consent connection calling a key-only read tool); over MCP the same text comes back as a tool error | raise the key's level, or mint a higher key; a consent connection needs a developer key for it |
 | `200 · status: confirmation_required` | a Full access key's destructive verb without `confirm=true` | pass `confirm=true` after the person agreed |
-| `400 · validation` | a missing `q`, both `content` and `url`, an ambiguous `container` | fix the request; with several Memories in reach, `container` is required |
+| `400 · validation` | an empty `q`, both `content` and `url`, an ambiguous `container` | fix the request; with several Memories in reach, `container` is required |
+| `422 · validation` | a required field is missing or has the wrong type; `details.fields` names it | fix the request |
 | `404 · not_found` | an unknown document or memory id | list first |
 | `422 · capability_unavailable · no model` | the account has no working model | [AI Setup](/use/account-and-models/ai-setup/) |
 | `422 · capability_unavailable · no agent containers` | the memory service is unavailable | contact support with the error and trace ID |
@@ -50,7 +55,8 @@ Look up the word on screen, or the status in the answer.
 | `429 · rate_limited` | the account's concurrent-turn budget | retry later; the SDK retries twice with backoff |
 | `202` with `document_id: null` | the folder sync had not written the row yet | list the container's documents in a moment |
 | a search takes a minute | the container was asleep | allow time for startup; check for errors if the request times out |
-| `405` on the MCP URL | a wrong path that missed the mount, e.g. `/mcp` or `/mcp-http/v1` | use `https://api.app.membase.com/mcp-http` exactly; a trailing slash is fine |
+| `405 · method_not_allowed` on the MCP URL | the URL misses the MCP path: a bare domain or `/mcp` is the web app, which answers a browser with the app page and a client's `POST` with `405` | use `https://api.app.membase.com/mcp-http` exactly; a trailing slash is fine |
+| `invalid_target` when the client authorizes | a path below the endpoint, e.g. `/mcp-http/v1`: it answers `401` like the right URL, then the authorization refuses it | use `https://api.app.membase.com/mcp-http` exactly |
 
 ## On the extension
 

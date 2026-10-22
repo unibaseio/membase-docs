@@ -23,7 +23,7 @@ time; the change applies on the credential's next call.
 | Minted by | the owner, under **Connect › Developer keys** | the owner, approving an app on the OAuth consent screen |
 | Held by | code the owner runs: a script, a server, an SDK, an AI running the skill | an AI app: Claude, ChatGPT, Cursor, Codex, Grok, Kimi… |
 | Shape | `mbk_<key id>_<token>`, shown once; the key's page keeps a hint such as `mbk_7f3a92d1…c91e` | opaque; the app stores it |
-| Access | **Read**, **Read & write** or **Full access**, chosen at creation and changeable in place | read-only, always |
+| Access | **Read**, **Read & write** or **Full access**, chosen at creation; it can be lowered in place, but a Read key cannot be raised to write (create a new key) | read-only, always |
 | Reach | the Memories ticked on the key, or *all, including later ones* | the Memories ticked on consent |
 | Profile | when **Your profile** is ticked | when **Profile access** is ticked at consent; to change it, disconnect and authorize again |
 | Can confirm a removal | yes, with `confirm=true` | never |
@@ -52,9 +52,11 @@ the tool table itself, which is why `ask_agent` appears under Read there; a key 
 reaches it.
 
 A call above the key's level is refused with `403` and `code: unauthorized`, and the key's
-page counts it as a *refused* call (`ask_agent` excepted: that refusal is not recorded). The
-level can be raised or lowered on the key's page without re-minting; the token stays the
-same and the next call reads the new grant.
+page counts it as a *refused* call (`ask_agent` excepted: that refusal is not recorded). Lowering
+the level on the key's page applies on the key's next call, with the same token. Raising it
+does not give a **Read** key the right to write: its token was minted read-only, so its
+writes keep failing with `token missing required scope`. To write, create a new key at
+**Read & write** or **Full access**.
 
 ## Reach
 
@@ -63,11 +65,13 @@ on the Connect page, on the key's page under **Memory access**, or on a Memory's
 **Use in**; all three are the same switch. A key created with *All memories, including ones
 you make later* reaches every container the account has now or later.
 
-![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means 403 and not listed on the next call](/images/figures/reach-one-switch.svg)
+![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means not listed and refused on the next call](/images/figures/reach-one-switch.svg)
 
-A container outside the reach is refused exactly like one that does not exist: `403`,
-`code: unauthorized`, *may not use that container*. `list_containers` never lists it, so a
-client cannot tell withheld from absent. With exactly one container in reach the `container`
+On a key limited to listed Memories, a container outside the reach is refused exactly like
+one that does not exist: `403`, `code: unauthorized`, *may not use that container*. On an
+*All memories* key, an id that is not one of the account's answers `404 · not_found`.
+`list_containers` never lists a container outside the reach, so a client cannot tell
+withheld from absent. With exactly one container in reach the `container`
 field may be omitted on `add_memory`; with more than one it is required.
 
 ## The profile tick
@@ -90,9 +94,10 @@ their own: a call without `confirm=true` answers `200` with
 
 and the `how` sentence is what to relay to the person. Pass `confirm=true` only after they
 agreed; from a developer key that counts as the owner's confirmation. A consent token is
-never offered these verbs at all, so from an AI app the call is refused with `403 ·
-unauthorized · tool 'delete_document' is not in this agent's capability profile`, not
-answered with the sentence.
+never offered these verbs at all and is read-scoped, so from an AI app the call is refused
+with `unauthorized · token missing required scope`, not answered with the sentence. A
+**Read & write** key gets `403 · unauthorized · tool 'delete_document' is not in this agent's
+capability profile`.
 
 ## Expiry, rotation, revocation
 
@@ -110,18 +115,19 @@ already received or stored by an external client.
 |---|---|
 | `401` | no bearer at all (REST; the MCP endpoint differs, below) |
 | `403 · unauthorized` | an unknown, expired or revoked token; a container outside the reach; a verb above the level. The message says which. |
-| `403 · unauthorized · not in this agent's capability profile` | the verb is above the key's level |
-| `403 · unauthorized · may not use that container` | the container is outside the reach, or does not exist |
+| `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key or a consent token |
+| `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `get_profile` without the profile tick |
+| `403 · unauthorized · may not use that container` | on a key limited to listed Memories: the container is outside the reach, or does not exist (an *All memories* key gets `404 · not_found` for an id that is not the account's) |
 
 On the REST endpoints the status is `403` and not `401` for a bad token on purpose: the
 request was authenticated as *some* caller (the key id is in the token) and that caller is
 not allowed. Only a request with no bearer is `401`.
 
-The MCP endpoint (`/mcp-http`) follows the OAuth convention instead: a missing bearer and an
-invalid, expired or revoked one both answer `401` with
-`WWW-Authenticate: Bearer error="invalid_token", resource_metadata="https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http"`
-and an RFC 6750 body, `{"error": "invalid_token", "error_description": "…"}`, not the
-`{"error": {"code", …}}` envelope.
+The MCP endpoint (`/mcp-http`) follows the OAuth convention instead and answers `401` in
+both cases, with a flat body rather than the `{"error": {"code", …}}` envelope:
+
+* **No bearer:** `WWW-Authenticate: Bearer resource_metadata="https://api.app.membase.com/.well-known/oauth-protected-resource/mcp-http"` and `{"error": "unauthorized", "error_description": "…"}`.
+* **An invalid, expired or revoked bearer:** `WWW-Authenticate: Bearer error="invalid_token", resource_metadata="…"` and the RFC 6750 body `{"error": "invalid_token", "error_description": "…"}`.
 
 ## Managing keys from code
 
@@ -131,8 +137,8 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 | Call | Does |
 |---|---|
-| `POST /v1/api-keys` | mint a key: name, level, container list or `all_views`, profile tick, `expires_in_days` (1–3650; omit for never) |
-| `PATCH /v1/api-keys/{id}` | change its name, level, profile tick or all-containers reach; the next call reads the new grant |
+| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its containers) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
+| `PATCH /v1/api-keys/{id}` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
 | `PATCH /v1/exposures/{id}/views` | change its container list |
 | `GET /v1/api-keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
 | `DELETE /v1/exposures/{id}` | revoke it, at once |

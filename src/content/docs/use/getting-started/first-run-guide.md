@@ -14,8 +14,10 @@ On a new account the product dims the page and lights the one control to press n
 
 ![The guide opens on a name card](/images/shots/tour-name-card.png)
 
-The guide opens on a name card, **Set your display name**. Press **Continue** and the first real
-control lights up, with a small card beside it saying what to do.
+The guide opens on a card titled **Set up your first memory**, with the three steps in a rail
+on its left, that asks for your display name. (On a narrow screen it is a smaller card at the
+foot of the screen, **Set your display name**.) Press **Continue** and the first real control
+lights up, with a small card beside it saying what to do.
 
 ![Step 1 highlights Create memory](/images/shots/tour-step-1.png)
 
@@ -27,7 +29,8 @@ A few things worth knowing:
 - A step you have not done holds until you do it. You can close the guide any time with the X
   on its card.
 - It opens by itself once per browser session on an account with no memories and no connected
-  apps. After that, the **Setup guide** button at the top right of Home starts it again from the
-  name card.
-- On a page without the step's control, the card stands at the corner with one door to the right
-  page.
+  apps. After that, the **Setup guide** button (the compass icon at the top right of a Home
+  conversation) starts it again from the name card.
+- On a page without the step's control, the guide shows a centred card with one button to the
+  right page, such as **Open Memory** or **Open Connect**. On a narrow screen, or while the
+  control is not on screen yet, a small card stands at the corner instead.

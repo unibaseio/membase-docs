@@ -52,7 +52,7 @@ source, the memories to consult, and the skills. Send is at the right.
    memory, the assistant says so and names the page it read.
 3. **Activity.** Folded under the answer: which tools ran, including the memory it recalled.
 
-Day separators replace a time on every line. Hovering a message shows **Copy**, **Retry**,
+A day separator heads each day; answers also show their time beside the assistant's name. Hovering a message shows **Copy**, **Retry**,
 **Edit & resend** and **Branch**. Under an answer you may also see memory traces such as
 *Saved to memory* or *Recalled an earlier conversation*. A *New reply* pill appears when an
 answer lands while you have scrolled up.
@@ -84,7 +84,7 @@ Look up the word on screen.
 
 | It says | What it means | Do |
 |---|---|---|
-| *AI is unavailable* | no model source | **AI Setup › Connect** a key or a subscription |
+| *AI is unavailable* | no model source | press **Open AI Setup**, then **Connect** a key or a subscription |
 | the reply spins | first reply after a quiet period wakes the assistant | wait; if it does not land, **Retry** |
 | *New reply* pill | an answer landed while you scrolled up | click it |
 

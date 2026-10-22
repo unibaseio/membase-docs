@@ -24,7 +24,9 @@ Memories (a topic such as *Project decisions*), not a tenant.
 | **Deletion** | revoking, narrowing or deleting takes effect on the next call, ahead of any cache, projection or issued credential. |
 
 A container outside a credential's reach is refused the same way as one that does not exist,
-so a caller cannot even enumerate what it may not read.
+so a caller cannot even enumerate what it may not read: `403 · may not use that container` on
+a key limited to listed Memories. An *All memories* key reaches every container in the
+account, so an id from outside it answers `404 · not_found`.
 
 ## A product that serves many people
 
@@ -56,8 +58,11 @@ that user's bearer and nobody else's.
 ```python
 from membase import Membase
 
+def load_user_key(user_id: str) -> str:
+    ...  # your encrypted per-user store; returns the mbk_… token this user pasted
+
 def memory_for(user) -> Membase:
-    return Membase(api_key=secrets.get(user.id))       # that user's key, never another's
+    return Membase(api_key=load_user_key(user.id))     # that user's key, never another's
 
 memory_for(alice).search("what did we decide about the ledger")
 ```
@@ -89,7 +94,7 @@ The negative cases are the ones to test:
 
 | Try | Expect |
 |---|---|
-| a container id from another account, with your key | `403 · unauthorized · may not use that container` |
+| a container id from another account, with your key | `403 · unauthorized · may not use that container` on a key limited to listed Memories; `404 · not_found` on an *All memories* key |
 | a container the owner switched off for the key | the same `403`, on the very next call |
 | a revoked key | `403 · unauthorized` on every call, at once |
 | `delete_document` on a Read & write key | `403 · unauthorized · not in this agent's capability profile` |

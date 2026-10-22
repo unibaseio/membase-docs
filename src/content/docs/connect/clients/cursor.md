@@ -66,6 +66,6 @@ Delete the entry from `mcp.json`, then **Disconnect…** on Cursor's page in Con
 | It says | What it means | Do |
 |---|---|---|
 | the server shows red under MCP | the URL is wrong, or consent was not completed | check the URL is the exact address, path included; retry the prompt; the Output panel's MCP Logs has the error |
-| the tools appear but every call is refused | the key in `headers` is expired or revoked | rotate it on the key's page and update the file |
+| Membase cannot connect, or asks to authenticate, with a key in `headers` | the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request, so no tools load | mint a new key and update the file |
 | an empty container list | connected, no Memory switched on | **Uses** on Cursor's page in Connect |
 | a project file with a key was committed | the token is public | **Revoke…** it now and mint another |

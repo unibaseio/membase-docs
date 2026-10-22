@@ -79,6 +79,6 @@ server.
 | `claude mcp list` shows membase as *needs authentication* | consent not completed | `claude mcp login membase`, or `/mcp` in a session |
 | *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on Claude Code's page in Connect, or **Use in** on the Memory |
 | the skill says it has no access | no key, or the key reaches nothing | Skills tab › **Create key**; or switch a Memory on for the key |
-| a write is refused with `403` | the connection is consent-minted (read-only), or the key is Read | use a Read & write key |
+| a write comes back as a tool error, *token missing required scope* | the connection is consent-minted (read-only), or the key is Read | use a Read & write key |
 | the first search takes a minute | the memory was asleep | nothing; the next one is quick |
 | the model asks me to confirm a delete | a Full access key called delete or forget without `confirm=true` and got its `how` sentence | decide; only a Full access key can pass `confirm=true` |

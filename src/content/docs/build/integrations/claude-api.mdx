@@ -14,7 +14,7 @@ Everything below assumes `MEMBASE_API_KEY` in the environment, minted at **Read 
 with **Your profile** ticked ([Authentication & Scopes](/build/reference/authentication/)), and your model
 provider's key beside it. The loop is the same in every harness:
 
-![Read the profile once, search per question, answer citing the container, then save what the person supplied so the next search finds it](/images/figures/core-loop.svg)
+![Read the profile once, search per question, answer citing the container, then save what the person supplied, which a later search finds once the Memory's learning run has read it](/images/figures/core-loop.svg)
 
 ## Membase as a remote MCP server
 
@@ -35,7 +35,7 @@ import anthropic
 client = anthropic.Anthropic()
 
 response = client.beta.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=16000,
     betas=["mcp-client-2025-11-20"],
     mcp_servers=[{
@@ -67,7 +67,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const client = new Anthropic();
 
 const response = await client.beta.messages.create({
-  model: "claude-opus-5",
+  model: "claude-opus-5-5",
   max_tokens: 16000,
   betas: ["mcp-client-2025-11-20"],
   mcp_servers: [{
@@ -138,7 +138,7 @@ def remember(content: str) -> str:
 
 profile = memory.profile()
 runner = claude.beta.messages.tool_runner(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=16000,
     system="Standing facts about the user: " + "; ".join(profile["static"]),
     tools=[search_memories, remember],
@@ -182,7 +182,7 @@ const remember = betaZodTool({
 
 const profile = await memory.profile();
 const final = await claude.beta.messages.toolRunner({
-  model: "claude-opus-5",
+  model: "claude-opus-5-5",
   max_tokens: 16000,
   system: "Standing facts about the user: " + profile.static.join("; "),
   tools: [searchMemories, remember],

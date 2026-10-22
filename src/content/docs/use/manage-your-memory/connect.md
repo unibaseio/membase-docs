@@ -15,8 +15,8 @@ AI, and the page has a tab for each.
 2. **The address** (MCP tab). Copy it into the app's connector or MCP settings; the app opens
    your browser and you approve it on the consent card, ticking the memories it may read. An
    app connected this way can only read.
-3. **The client catalog, by purpose.** *Chat assistants* and *Coding tools*. A dashed tile says
-   *Set up* and unfolds that app's steps; a solid tile says *Authorized · awaiting first use* or
+3. **The client catalog, by purpose.** *Chat assistants* and *Coding tools*. A tile you have not set up says
+   *Set up* and unfolds that app's steps; a connected tile (brand-blue border) says *Authorized · awaiting first use* or
    *Authorized · used …* and opens the app's page; *Approval expired · authorize again* means
    the app must sign in again. An app that has no tile of its own (any other MCP client)
    appears under *Other apps*, with a monogram, once you have approved it.
@@ -50,7 +50,7 @@ developer docs' [API reference](/build/reference/api-reference/).
 
 ## Set an app up by hand
 
-Picking a dashed tile unfolds the connector URL and the steps for that app:
+Picking a tile that says *Set up* unfolds the connector URL and the steps for that app:
 
 ![Claude's steps](/images/shots/connect-claude-steps.png)
 
@@ -59,7 +59,7 @@ Picking a dashed tile unfolds the connector URL and the steps for that app:
 
 ## An app's page
 
-Once connected, the tile opens the app's page: the hero (name, *Authorized · used …* or
+Once connected, the tile opens the app's page: the hero (name, *Authorized · last activity …* or
 *Authorized · awaiting first use*, and the amber words *No memory access* while no memory is
 switched on), a **Uses** card with one row per memory and its switch, and, when there is more
 than one approval, an **Approvals** card with a **Revoke** per credential. **Disconnect…** in the
@@ -119,13 +119,13 @@ shows only the **Tell your AI** sentence, and a key's page shows no snippets aft
 
 Using the key from a script or an SDK is the developer [Quickstart](/build/getting-started/api-quickstart/);
 using it in Claude Code, Codex, Cursor or Kimi Code is on each client's page under
-**Connect your AI**.
+[Connect your AI](/connect/).
 
 ### A key's page
 
 ![A key's page](/images/shots/developer-key-page.png)
 
-- **Access** (1) — change the level with the segmented control; the tools it now holds are listed under it. The change applies on the key's next call; the token stays the same.
+- **Access** (1) — change the level with the segmented control; the tools it now holds are listed under it. The token stays the same. Lowering the level applies on the key's next call, and so does raising **Read & write** to **Full access**. Raising a **Read** key to **Read & write** or **Full access** does not give it write access yet: its writes are still refused, so create a new key at the higher level instead.
 - **Memory access** (2) — a switch per memory, one for *All memories, including ones you make later*, and one for *Your profile*. Off takes effect on the key's next call.
 - **Expiry** (3) — when the token stops working. It cannot be extended; to change it, rotate.
 - **Usage** (4) — calls in the last 30 or 7 days, how many were **refused** (the key asked for a memory or a verb it does not have), and the tool it calls most.

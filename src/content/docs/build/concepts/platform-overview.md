@@ -35,7 +35,7 @@ user (`static`) and the most recently changed ones (`dynamic`). `get_profile` re
 | Screen | The person uses it to | Your code meets it as |
 |---|---|---|
 | [Home](/use/use-your-assistant/home/) | talk to the assistant, the one agent that is theirs by default; reach it on Telegram | the profile it keeps; the assistant's own memory is not a container |
-| [Memory](/use/manage-your-memory/memory/) | make, run and inspect Memories | `list_containers`, `search_memories`, the items `forget_memory` removes; `learned` turning true after a run |
+| [Memory](/use/manage-your-memory/memory/) | make, run and inspect Memories | `list_containers`, `search_memories`; `learned` turning true after a run. Its learned items have no ids in the API, so code cannot forget one (`forget_memory` takes profile facts) |
 | [Files](/use/bring-your-material-in/files/) | keep files, and hand folders, uploads, Notion pages and captured conversations to a Memory | `add_document`, `list_documents`, `get_document`, `delete_document` |
 | [Studio](/use/advanced/studio/) | edit a Memory's pipeline canvas | nothing; a canvas run as an endpoint is `workflow_invoke` over MCP |
 | [Agents](/use/advanced/agents/) | build agents beyond the assistant | `ask_agent` on an agent-endpoint credential |
@@ -44,7 +44,7 @@ user (`static`) and the most recently changed ones (`dynamic`). `get_profile` re
 | [AI Setup](/use/account-and-models/ai-setup/) | choose the account's model | `422 · capability_unavailable` when there is none |
 | [Connect](/use/manage-your-memory/connect/) | let an AI app read Memories, mint keys | consent tokens and developer keys: [Authentication & Scopes](/build/reference/authentication/) |
 | [Marketplace](/use/share-and-trade/marketplace/) | sell and buy access to a Memory | subscriptions, `ask_agent` |
-| [Settings](/use/account-and-models/settings/) | plan, export, delete | `422 · reason: dormant` on a free plan whose turns are spent |
+| [Settings](/use/account-and-models/settings/) | plan, export, delete | `422 · capability_unavailable` with `details.reason: "dormant"` on a free plan whose turns are spent |
 
 ## Credentials
 
@@ -84,12 +84,13 @@ covers partial failures, deferred learning and timeouts.
 | Status | Code | When |
 |---|---|---|
 | 400 | `validation` | an empty `q`, both or neither of `content` and `url`, `container` omitted when more than one is in reach |
-| 403 | `unauthorized` | outside the credential's reach, or a verb above its level |
+| 401 | `unauthenticated` | no bearer token on the request |
+| 403 | `unauthorized` | an invalid, expired or revoked key; outside the credential's reach; or a verb above its level |
 | 404 | `not_found` | an unknown document or memory id |
 | 422 | `validation` | a missing or mistyped body field; read `code` to tell it from the row below |
 | 422 | `capability_unavailable` | the account's memory cannot run a turn here (no agent container, no model) |
-| 422 | `reason: dormant` | a free-plan account whose free turns are spent |
-| 429 | `rate_limited` | the account's concurrent-turn budget; retry later |
+| 422 | `capability_unavailable` | with `details.reason: "dormant"`: a free-plan account whose free turns are spent |
+| 429 | `rate_limited` | the account's concurrent-turn budget, or the token's per-minute request limit; retry later |
 
 Uploads through `add_document` are capped at 32 MiB per file, on every plan. An account on
 the free plan whose free turns are spent keeps its memory but cannot run turns until it

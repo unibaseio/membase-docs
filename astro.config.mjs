@@ -8,8 +8,14 @@ export default defineConfig({
     starlight({
       title: 'Membase Docs',
       favicon: '/favicon.ico', // same icon as membase.com
-      plugins: [starlightLlmsTxt()], // /llms.txt, /llms-full.txt for AI readers
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/unibaseio/membase-ai' }],
+      plugins: [
+        // /llms.txt, /llms-full.txt and /llms-small.txt for AI readers
+        starlightLlmsTxt({
+          description:
+            'Membase keeps memory from your notes, files and conversations and lets your assistant, connected AI apps (MCP) and your own code (SDK, REST) use it.',
+        }),
+      ],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/unibaseio/membase' }],
       sidebar: [
   {
     "label": "Overview",
@@ -315,12 +321,12 @@ export default defineConfig({
         "link": "https://app.membase.com"
       },
       {
-        "label": "membase-ai on GitHub",
-        "link": "https://github.com/unibaseio/membase-ai"
+        "label": "membase on GitHub",
+        "link": "https://github.com/unibaseio/membase"
       },
       {
         "label": "Local engine reference",
-        "link": "https://github.com/unibaseio/membase-ai/blob/main/docs/reference.md"
+        "link": "https://github.com/unibaseio/membase/blob/main/docs/reference.md"
       }
     ]
   }

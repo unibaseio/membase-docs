@@ -26,13 +26,16 @@ export MEMBASE_API_KEY="mbk_…"
 ```
 
 The [key guide](/use/manage-your-memory/connect/#developer-keys) explains rotation and
-revocation. The examples call `https://api.app.membase.com`.
+revocation. The curl example calls `https://api.app.membase.com`; the released SDKs default to
+`https://api.app.membase.ai`, which serves the same API. Point either SDK elsewhere with
+`base_url` / `baseUrl` or `MEMBASE_BASE_URL`.
 
 ## 2. Add, wait, then search
 
 `add` returns `202` when material is accepted; it does not promise that learning has finished.
 Check `documents.get(id).learned` before searching for the new content. The examples stop
-on a failed learning run and have a polling limit, so they cannot wait indefinitely.
+when the learning run fails, is refused (the Memory's daily run budget is spent) or is canceled,
+and have a polling limit, so they cannot wait indefinitely.
 
 
 <Tabs syncKey="lang">
@@ -50,7 +53,7 @@ from membase import Membase
 client = Membase()
 containers = client.containers.list()["containers"]
 if len(containers) != 1:
-    raise RuntimeError("For this example, select exactly one Memory on the key's Reach page.")
+    raise RuntimeError("For this example, select exactly one Memory under Memory access on the key's page.")
 container = containers[0]["id"]
 custom_id = "quickstart-ledger-v1"
 
@@ -69,7 +72,7 @@ for _ in range(60):
     if document.get("learned"):
         break
     status = (document.get("learning_run") or {}).get("status")
-    if status in {"failed", "canceled"}:
+    if status in {"failed", "refused", "canceled"}:
         raise RuntimeError("Learning stopped. Open the Memory's Report in the app.")
     time.sleep(5)
 else:
@@ -92,7 +95,9 @@ if not found["results"]:
 <TabItem label="TypeScript">
 
 Install with `npm install @unibaseio/membase` and run this in a server-side TypeScript project
-(Node 18 or newer). Keep the key on the server, outside browser bundles.
+on Node 18 or newer. The package is ESM-only and the example uses top-level `await`, so the
+project must be an ES module: `"type": "module"` in `package.json`, or save the file as
+`quickstart.mts`. Keep the key on the server, outside browser bundles.
 
 ```ts
 import { Membase } from "@unibaseio/membase";
@@ -100,7 +105,7 @@ import { Membase } from "@unibaseio/membase";
 const client = new Membase();
 const { containers } = await client.containers.list();
 if (containers.length !== 1) {
-  throw new Error("For this example, select exactly one Memory on the key's Reach page.");
+  throw new Error("For this example, select exactly one Memory under Memory access on the key's page.");
 }
 const container = containers[0].id;
 const customId = "quickstart-ledger-v1";
@@ -116,7 +121,7 @@ for (let attempt = 0; attempt < 60; attempt++) {
   const document = await client.documents.get(documentId);
   if (document.learned) { learned = true; break; }
   const run = document.learning_run as { status?: string } | undefined;
-  if (run?.status === "failed" || run?.status === "canceled") {
+  if (run?.status === "failed" || run?.status === "refused" || run?.status === "canceled") {
     throw new Error("Learning stopped. Open the Memory's Report in the app.");
   }
   await new Promise(resolve => setTimeout(resolve, 5000));
@@ -144,7 +149,7 @@ set -euo pipefail
 BASE=https://api.app.membase.com
 AUTH="Authorization: Bearer $MEMBASE_API_KEY"
 containers=$(curl --fail-with-body -sS "$BASE/v1/containers" -H "$AUTH")
-container=$(jq -er '.containers | if length == 1 then .[0].id else error("Select exactly one Memory on the key") end' <<< "$containers")
+container=$(jq -er '.containers | if length == 1 then .[0].id else error("Select exactly one Memory under Memory access on the key") end' <<< "$containers")
 custom_id=quickstart-ledger-v1
 payload=$(jq -n --arg container "$container" --arg id "$custom_id" \
   '{container: $container, content: "We chose Postgres for the Lumen ledger.", title: "Lumen decision", custom_id: $id}')
@@ -164,7 +169,7 @@ for ((attempt=0; attempt<60; attempt++)); do
       learned=true
       break
     fi
-    if jq -e '.learning_run.status == "failed" or .learning_run.status == "canceled"' <<< "$document" >/dev/null; then
+    if jq -e '.learning_run.status | IN("failed", "refused", "canceled")' <<< "$document" >/dev/null; then
       echo "Learning stopped. Open the Memory's Report in the app." >&2
       exit 1
     fi
