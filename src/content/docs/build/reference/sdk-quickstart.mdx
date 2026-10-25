@@ -32,6 +32,14 @@ For local mode, `pip install 'unibaseio-membase[local]'` on Python 3.12 or 3.13.
 `unibaseio-membase-core` engine and runs memory on your machine; the engine calls a model
 provider, by default OpenAI (`OPENAI_API_KEY`).
 
+Local search returns results in retrieval order. To rerank them, set `MEMBASE_RERANK`:
+
+- `llm`: one scoring call on your model provider, with the model you name in
+  `MEMBASE_RERANK_LLM_MODEL`. Results that do not answer the question are dropped
+  (`MEMBASE_RERANK_MIN_SCORE`, 0 to 10, default 3).
+- `cross-encoder`: a local model you name in `MEMBASE_RERANK_CE_MODEL`, after
+  `pip install sentence-transformers` (it installs torch).
+
 </TabItem>
 
 
