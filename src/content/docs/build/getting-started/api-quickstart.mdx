@@ -26,7 +26,8 @@ export MEMBASE_API_KEY="mbk_…"
 ```
 
 The [key guide](/use/manage-your-memory/connect/#developer-keys) explains rotation and
-revocation. The curl example calls `https://api.app.membase.com`; the released SDKs default to
+revocation. The curl example and the SDKs (from `unibaseio-membase` 0.3.3 and
+`@unibaseio/membase` 0.3.2) call `https://api.app.membase.com`; older SDK releases default to
 `https://api.app.membase.ai`, which serves the same API. Point either SDK elsewhere with
 `base_url` / `baseUrl` or `MEMBASE_BASE_URL`.
 

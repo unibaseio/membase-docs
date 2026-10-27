@@ -40,6 +40,32 @@ Local search returns results in retrieval order. To rerank them, set `MEMBASE_RE
 - `cross-encoder`: a local model you name in `MEMBASE_RERANK_CE_MODEL`, after
   `pip install sentence-transformers` (it installs torch).
 
+To keep everything on the machine, point the engine at a local OpenAI-compatible server
+such as [Ollama](https://ollama.com), for both chat and embeddings:
+
+```bash
+ollama pull qwen2.5:7b && ollama pull nomic-embed-text
+
+export MEMBASE_LLM_PROVIDER=openai-compat
+export MEMBASE_LLM_ENDPOINT=http://127.0.0.1:11434/v1
+export MEMBASE_EMBED_MODEL=nomic-embed-text MEMBASE_EMBED_DIM=768
+export OPENAI_API_KEY=ollama   # the client needs a value; Ollama ignores it
+for stage in READER RERANK EPISODE DECIDER AGENT KNOWLEDGE MULTIMODAL; do
+  export MEMBASE_${stage}_MODEL=qwen2.5:7b
+done
+```
+
+- Use `openai-compat`, not `MEMBASE_LLM_PROVIDER=ollama`: embeddings follow the endpoint only
+  with `openai-compat`, and otherwise still go to OpenAI and need a real `OPENAI_API_KEY`.
+- `MEMBASE_EMBED_DIM` must match the embedding model, and a store keeps the width it was
+  created with: switching embedding models means a new store.
+- Every stage defaults to an OpenAI model name, so set each one, as above.
+- Small models (around 3B) run but tend to embellish what they store; a 7B or larger instruct
+  model keeps memories faithful.
+
+With these set, `add`, `search`, `ask` and `membase --local mcp` make no calls beyond the
+endpoint you named.
+
 </TabItem>
 
 
@@ -112,10 +138,10 @@ const local = new Membase({ apiKey: "local", baseUrl: "http://127.0.0.1:8787" })
 |---|---|---|---|
 | Request timeout | `timeout` (seconds) | `timeoutMs` (milliseconds) | 90 seconds |
 | Retry limit | `max_retries` | `maxRetries` | 2 |
-| API origin | `base_url` | `baseUrl` | `MEMBASE_BASE_URL`, else `https://api.app.membase.ai` |
+| API origin | `base_url` | `baseUrl` | `MEMBASE_BASE_URL`, else `https://api.app.membase.com` |
 
-The released packages (`unibaseio-membase` 0.3.2, `@unibaseio/membase` 0.3.1) default to
-`https://api.app.membase.ai`, which serves the same API as `https://api.app.membase.com`.
+Releases before `unibaseio-membase` 0.3.3 and `@unibaseio/membase` 0.3.2 default to
+`https://api.app.membase.ai`, which serves the same API.
 
 A client for an API origin always needs a key: without `api_key` or `MEMBASE_API_KEY` the
 constructor raises (`ValueError` in Python, `Error` in TypeScript), even when a base URL is
