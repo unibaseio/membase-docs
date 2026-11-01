@@ -269,7 +269,7 @@ def main() -> int:
         )
         s.get(base + "/v1/memories", headers=bearer, params={"limit": 5}, timeout=60)
         s.post(
-            base + "/v1/documents/doc-nope/delete",
+            base + "/v1/documents/doc_c3JjaXRlbV8wMDAwMDAwMDAwMDAwMDAw/delete",
             headers=bearer,
             params={"confirm": "true"},
             timeout=60,
