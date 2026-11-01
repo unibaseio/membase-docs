@@ -18,16 +18,22 @@ The **Skills | Memory** switch selects the catalog.
 
 ## Memory listings
 
-A listing you create today is an **agent endpoint**. Two earlier kinds are no longer offered but
-still show for the people who bought them:
+A listing sells a **Memory, as answers**. The buyer's AI asks it questions and gets answers
+written from what the Memory knows. It never sees the Memory's files, documents or facts, never
+writes to it, and reaches no other Memory of the seller's. Two earlier kinds are no longer offered
+but still show for the people who bought them:
 
 | Type | What you receive |
 |---|---|
-| Agent endpoint | A per-listing MCP connector URL your AI calls with `ask_memory`; answers, never files. Valid 30 days per payment; renew to continue |
+| Memory (answers) | A credential that may only ask that one Memory: `ask_memory` over MCP, `POST /v1/ask` over REST. Answers, never files. Valid 30 days per payment, with the number of questions per period shown on the listing; renew to continue |
 | Snapshot (no longer offered) | A copy of the listed items at purchase time; later seller edits do not update it |
 | Live memory (no longer offered) | Read access to the seller's memory for the subscription period |
 
-![The seller's Memory stays in the seller's account; the listing sells it as answers; each subscriber calls ask_memory with their own credential and gets answers, never files](/images/figures/agent-endpoint.svg)
+![The seller's Memory stays in the seller's account and the memory engine answers from it; the listing sells it as answers; each subscriber calls ask_memory with their own credential and gets answers, never files; unlisting cuts every subscriber off at once](/images/figures/agent-endpoint.svg)
+
+Every question checks the purchase: it must be active and unexpired, the listing not suspended,
+and the period's questions not used up. If any of these fails, the question is refused. A listing
+bought earlier as an agent endpoint is now answered by its Memory the same way.
 
 Open a listing and read **Included access** for its specific terms. Live access can be
 revoked by the seller; a paid period does not guarantee access after the seller revokes it.
@@ -63,9 +69,10 @@ the seller's memory. Review the confirmation before unsubscribing.
 
 Manage listings under **Your listings**. Each row offers **Edit**, **Subscribers**, **View as a
 buyer** and **Delete**, plus **Publish** on a *draft* or **Make private** on a *live* listing;
-on the Memory's side, Settings › Sharing › Marketplace offers **Unlist…**. Before
-deleting or unlisting, review how the action affects existing subscribers. Removing a listing
-and deleting the Memory itself are separate actions.
+on the Memory's side, Settings › Sharing › Marketplace offers **Unlist…**. Deleting or
+unlisting a listing cuts its subscribers off at once, so review who it affects first. Deleting
+the Memory itself also takes it off the market: every listing selling it goes, and every
+subscriber loses access at once.
 
 ## Skills
 

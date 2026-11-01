@@ -102,7 +102,7 @@ segments; a key that has stopped working stays listed for 30 days so you can see
    - **Read** — search and list. It cannot change anything.
    - **Read & write** — also adds a memory or a document.
    - **Full access** — also deletes a document or forgets a memory. Each of those calls must still say so explicitly; a key never removes anything on its own.
-3. Pick the **Memory access** (3). Nothing is ticked to begin with. Tick the memories it may use, or **All memories, including ones you make later**. **Your profile**, the standing facts your assistant keeps about you, is the last row.
+3. Pick the **Memory access** (3). Nothing is ticked to begin with. Tick the memories it may use, or **All memories, including ones you make later**. **Your profile**, the standing facts your assistant keeps about you ([Settings › Your profile](/use/account-and-models/settings/#your-profile)), is the last row.
 4. Pick when it **Expires** (4): never, 30 days, 90 days or a year.
 5. Press **Create key** (5).
 
@@ -115,7 +115,7 @@ from the Skills tab), a `curl` call, Python, TypeScript, the Claude Code command
 `mcp.json` block Cursor and VS Code read. A key created from the Skills tab's **Create key**
 shows only the **Tell your AI** sentence, and a key's page shows no snippets afterwards.
 **Send a test call** (3) makes one real call with the new key from your browser and reports
-*Verified*, and how many containers `list_containers` answered with.
+*Verified*, and how many actions the key was granted.
 
 Using the key from a script or an SDK is the developer [Quickstart](/build/getting-started/api-quickstart/);
 using it in Claude Code, Codex, Cursor or Kimi Code is on each client's page under
