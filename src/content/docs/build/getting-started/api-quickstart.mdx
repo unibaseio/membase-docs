@@ -145,7 +145,7 @@ AUTH="Authorization: Bearer $MEMBASE_API_KEY"
 custom_id=quickstart-ledger-v1
 payload=$(jq -n --arg id "$custom_id" \
   '{content: "We chose Postgres for the Lumen ledger.", title: "Lumen decision", custom_id: $id}')
-added=$(curl --fail-with-body -sS "$BASE/v1/documents" -H "$AUTH" \
+added=$(curl --fail-with-body -sS "$BASE/v1/documents/add" -H "$AUTH" \
   -H 'Content-Type: application/json' -d "$payload")
 document_id=$(jq -r '.id // empty' <<< "$added")
 if [ -z "$document_id" ]; then

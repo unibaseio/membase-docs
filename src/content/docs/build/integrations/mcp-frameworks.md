@@ -39,7 +39,7 @@ npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 
 Three requests cover most integrations: `GET /v1/profile`, `POST /v1/search` with `{"q": …}`
-and `POST /v1/memories` with `{"content": …}`, each with the bearer header. No request names a
+and `POST /v1/memories/add` with `{"content": …}`, each with the bearer header. No request names a
 Memory: a search answers `{items, partial}` across every Memory the key reaches, each passage
 naming its `memory_name`, and a write lands in the key's write target (a key that reaches
 several text Memories is refused with `422 write_target_required`).

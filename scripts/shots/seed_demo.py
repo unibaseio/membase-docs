@@ -273,8 +273,8 @@ def main() -> int:
             json={"q": "x", "container": reading["id"]},
             timeout=60,
         )  # refused: out of reach
-        s.delete(
-            base + "/v1/documents/doc-nope", headers=bearer, params={"confirm": "true"}, timeout=60
+        s.post(
+            base + "/v1/documents/doc-nope/delete", headers=bearer, params={"confirm": "true"}, timeout=60
         )  # refused: above the level
         log("key", k["binding_id"], k["token_hint"])
     if "ci — docs indexer" not in live:

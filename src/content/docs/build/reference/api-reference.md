@@ -146,7 +146,7 @@ Answers `200` with a JSON object.
 
 level **Read & write**.
 
-`POST /v1/memories`
+`POST /v1/memories/add`
 
 Save one fact into this credential's write target. The answer is the note it was written as — a document of kind `note`; poll `GET /v1/documents/{id}` for its learning.
 
@@ -161,7 +161,7 @@ Answers `202 Accepted` with a JSON object.
 
 level **Read & write**.
 
-`POST /v1/documents`
+`POST /v1/documents/add`
 
 Hand in a document (text or a url) to this credential's write target.
 
@@ -178,7 +178,7 @@ Answers `202 Accepted` with a JSON object.
 
 level **Full access**; **destructive** — `confirm=true` from a developer key, or a request.
 
-`DELETE /v1/documents/{document_id}`
+`POST /v1/documents/{document_id}/delete`
 
 Withdraw a document and what every Memory learned from it.
 
@@ -193,7 +193,7 @@ Answers `200` with a JSON object.
 
 level **Full access**; **destructive** — `confirm=true` from a developer key, or a request.
 
-`DELETE /v1/memories/{memory_id}`
+`POST /v1/memories/{memory_id}/forget`
 
 Forget one learned fact; the material it was learned from stays.
 
@@ -252,7 +252,7 @@ Answers `200` with a JSON object.
 
 level **Full access**; **destructive** — `confirm=true` from a developer key, or a request.
 
-`DELETE /v1/media/{media_id}`
+`POST /v1/media/{media_id}/delete`
 
 Forget a photo or video and remove its file.
 

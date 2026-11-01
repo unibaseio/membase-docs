@@ -57,6 +57,6 @@ npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 
 Three requests cover most integrations: `GET /v1/profile`, `POST /v1/search` with `{"q": …}`
-and `POST /v1/memories` with `{"content": …}`, each with the bearer header. No request names a
+and `POST /v1/memories/add` with `{"content": …}`, each with the bearer header. No request names a
 Memory; a write lands in the key's write target.
 [API reference](/build/reference/api-reference/) has every operation.
