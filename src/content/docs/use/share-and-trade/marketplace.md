@@ -23,11 +23,11 @@ still show for the people who bought them:
 
 | Type | What you receive |
 |---|---|
-| Agent endpoint | A per-listing MCP connector URL your AI calls with `ask_agent`; answers, never files. Valid 30 days per payment; renew to continue |
+| Agent endpoint | A per-listing MCP connector URL your AI calls with `ask_memory`; answers, never files. Valid 30 days per payment; renew to continue |
 | Snapshot (no longer offered) | A copy of the listed items at purchase time; later seller edits do not update it |
 | Live memory (no longer offered) | Read access to the seller's memory for the subscription period |
 
-![The seller's Memory and its agent stay in the seller's container; the listing is an agent endpoint; each subscriber calls ask_agent with their own credential and gets answers, never files](/images/figures/agent-endpoint.svg)
+![The seller's Memory stays in the seller's account; the listing sells it as answers; each subscriber calls ask_memory with their own credential and gets answers, never files](/images/figures/agent-endpoint.svg)
 
 Open a listing and read **Included access** for its specific terms. Live access can be
 revoked by the seller; a paid period does not guarantee access after the seller revokes it.

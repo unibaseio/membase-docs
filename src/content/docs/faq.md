@@ -53,8 +53,9 @@ continuing to run the assistant requires an available model source or a suitable
 
 ## What is the profile?
 
-The profile contains information about you, such as preferences and recent context. You can
-grant access to it separately from access to individual Memories.
+The profile is a list of standing statements about you, such as your name, role and lasting
+preferences. Each says where it came from: you stated it, it was imported, or the assistant
+recorded it. You can grant access to it separately from access to individual Memories.
 
 ## What cannot be undone?
 

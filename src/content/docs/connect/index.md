@@ -18,7 +18,7 @@ fact in your Memory to verify the result.
 
 | | For | How it authenticates | What it gets |
 |---|---|---|---|
-| **MCP with consent** | an AI app the person uses: Claude, ChatGPT, Cursor, Codex, Grok, Kimi, VS Code, Windsurf… | the app discovers OAuth, the browser opens Membase's consent screen, the person ticks the Memories the app may use and whether it may read their profile | `list_containers`, `search_memories` and, when ticked, `get_profile`. Read-only by design. |
+| **MCP with consent** | an AI app the person uses: Claude, ChatGPT, Cursor, Codex, Grok, Kimi, VS Code, Windsurf… | the app discovers OAuth, the browser opens Membase's consent screen, the person ticks the Memories the app may use and whether it may read their profile | search and the read tools (`search_memories`, `list_memories`, `get_memory`, the media reads) and, when ticked, `list_profile_facts`. Read-only by design. |
 | **Skill with a developer key** | an AI that reads pages and runs commands: Claude Code, Codex, Cursor's agent, Kimi Code | a developer key the person minted | the key's access level, up to Full access |
 
 The account owner can change or revoke either connection from the
@@ -71,7 +71,7 @@ can do, which Memories it uses, remove it, and what to do when something looks w
 1. The person pastes the URL into the app, or runs the app's `mcp add` command.
 2. The app answers with a browser window: Membase's consent card, listing the Memories with a tick each and **Profile access** for the profile.
 3. The person presses **Approve access**. The app's tile on Connect says *Authorized · awaiting first use*; its page lists what it **Uses**. An app without a tile in the catalog (Grok, Kimi Code, any other MCP client) appears under **Other apps** once the consent completed, and only then has a page.
-4. In a chat, the person asks *"List my Membase containers."* Check that it names the Memory you granted. Then ask about a specific fact from its
+4. In a chat, the person asks *"Which Membase memories can you use?"* Check that it names the Memory you granted. Then ask about a specific fact from its
    material and check the answer. An empty list means no Memory is switched on for this connection yet.
 
 Connecting is the account's, once. Which Memories an app uses is the Memory's, and the

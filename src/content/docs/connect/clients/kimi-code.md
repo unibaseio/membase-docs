@@ -52,12 +52,13 @@ version control. The key's level applies, up to Full access. The skill sentence 
 
 ## What it can do
 
-With consent: `list_containers`, `search_memories` and, when ticked, `get_profile`; nothing
-that writes. With a key: the key's level.
+With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`; nothing
+that writes. With a key: the key's level; the tools per level are on
+[Any MCP client](/connect/clients/membase-mcp/#what-a-connected-client-sees).
 
 ## Which Memories it uses
 
-An empty container list means no Memory is switched on for this connection. Switch one on
+An empty list of memories means no Memory is switched on for this connection. Switch one on
 under **Uses** on Kimi Code's page in Connect (under **Other apps**), or under **Use in** on
 the Memory.
 
@@ -73,6 +74,6 @@ open list it as `removed` until they end. Then **Disconnect…** on Kimi Code's 
 |---|---|---|
 | `/mcp` shows Membase not authorized | consent not completed | `/mcp-config login membase` |
 | `/mcp` does not list Membase | the entry was added while this session was open | start a new session |
-| an empty container list | connected, no Memory switched on | **Uses** on Kimi Code's page in Connect |
+| it can use no memories | connected, no Memory switched on | **Uses** on Kimi Code's page in Connect |
 | a write is refused | the connection is consent-minted (read-only), or the key is Read | use a Read & write key through `bearerTokenEnvVar` or `headers` |
 | Membase fails to connect with a key | `MEMBASE_API_KEY` is not set in Kimi Code's environment, or the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request, so no tools load | set the variable; or mint a new key, update `MEMBASE_API_KEY` (or the header) and start a new session |

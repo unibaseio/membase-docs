@@ -38,8 +38,8 @@ person minted or approved. Three shapes fit most products.
 If your product can act as an MCP client (an agent framework, a desktop app, anything that
 speaks Streamable HTTP and OAuth), point it at `https://api.app.membase.com/mcp-http`. Each
 user completes the consent screen once; your product holds one consent token per user and
-gets `list_containers`, `search_memories` and, when the user ticked it, `get_profile`. It
-cannot write and cannot see a Memory the user did not tick. The flow is in
+gets the read tools (`search_memories`, the fact list, the media reads) and, when the user
+ticked it, `list_profile_facts`. It cannot write and cannot see a Memory the user did not tick. The flow is in
 [Authentication & Scopes](/build/reference/authentication/#oauth-for-an-app-that-connects-over-mcp) and the
 client side in [Any MCP client](/connect/clients/membase-mcp/).
 
@@ -72,15 +72,16 @@ call. And never route
 one user's request through another user's key: the platform cannot tell, but the memory it
 answers from is the wrong person's.
 
-### Your agent answers from a memory you own
+### Your Memory answers people you sell it to
 
 The reverse case: you hold the memory (a support corpus, a product's knowledge) and many
-people ask it. List that Memory on the Marketplace as an **agent endpoint**. Each subscriber
-receives a credential of their own and calls `ask_agent`; your agent answers from what it
-learned, and the files never leave your container. Lapsing a subscription stops access at
-once. See [Platform overview](/build/concepts/platform-overview/#marketplace).
+people ask it. List that Memory on the Marketplace; what is sold is the Memory, as answers.
+Each subscriber receives a credential of their own that holds only `ask_memory`: the memory
+engine answers from what the Memory learned, and the passages, documents and files never leave
+your account. Lapsing a subscription stops access at once. See
+[Platform overview](/build/concepts/platform-overview/#marketplace).
 
-![The seller's Memory and its agent stay in the seller's container; the listing is an agent endpoint; each subscriber calls ask_agent with their own credential and gets answers, never files](/images/figures/agent-endpoint.svg)
+![The seller's Memory stays in the seller's account; the listing sells it as answers; each subscriber calls ask_memory with their own credential and gets answers, never files](/images/figures/agent-endpoint.svg)
 
 ## What is not isolation
 

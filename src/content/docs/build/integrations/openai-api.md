@@ -44,9 +44,9 @@ async function runTool(name: string, args: Record<string, string>): Promise<stri
   return "saved";
 }
 
-const profile = await memory.profile();
+const { items: profile } = await memory.profileFacts.list();
 const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-  { role: "system", content: "Standing facts about the user: " + profile.static.join("; ") },
+  { role: "system", content: "Standing facts about the user: " + profile.map((f) => f.content).join("; ") },
   { role: "user", content: "What did we decide about the ledger?" },
 ];
 
@@ -71,7 +71,7 @@ refused with `422 write_target_required`.
 
 ## Rules that hold in every shape
 
-* **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
+* **Profile once, search per question.** The profile facts are few and standing; search is a turn inside the user's memory.
 * **Cite the Memory.** Every hit names the Memory it came from (`memory_name`); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
 * **Never confirm on your own.** A delete or forget without `confirm=true` changes nothing and answers `428 confirmation_required` with a `how` sentence; relay it and stop.

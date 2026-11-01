@@ -180,12 +180,13 @@ for h in hits["items"]:
     print(h["memory_name"], "·", h["content"])
 hits["partial"]                                 # the Memories that could not answer
 
-# profile: who the user is (needs the profile tick on the key)
-p = client.profile(q="working hours")
-p["static"], p["dynamic"], p["results"]
+# profile facts: who the user is (needs the profile tick on the key)
+for f in client.profile_facts.list()["items"]:
+    print(f["source_kind"], "·", f["content"])
 
-# ask: the exposed agent's answer (an agent-endpoint credential, e.g. a marketplace subscription)
-client.ask("Summarise what the seller learned about Postgres RLS.")
+# ask: one answer from the memory (a credential that holds ask_memory: today, a marketplace buyer's)
+out = client.ask("Summarise what the seller learned about Postgres RLS.")
+out["answer"], out["citations"]                 # citations name the Memory, never a passage
 ```
 
 </TabItem>
@@ -203,10 +204,11 @@ const hits = await client.search({ q: "what does Acme need before the pilot", li
 for (const h of hits.items) console.log(h.memory_name, "·", h.content);
 hits.partial;                                    // the Memories that could not answer
 
-const p = await client.profile({ q: "working hours" });
-p.static; p.dynamic; p.results;
+const { items: facts } = await client.profileFacts.list();
+for (const f of facts) console.log(f.source_kind, "·", f.content);
 
-await client.ask({ message: "Summarise what the seller learned about Postgres RLS." });
+const out = await client.ask({ message: "Summarise what the seller learned about Postgres RLS." });
+out.answer; out.citations;                       // citations name the Memory, never a passage
 ```
 
 </TabItem>
@@ -217,7 +219,8 @@ await client.ask({ message: "Summarise what the seller learned about Postgres RL
 
 `add` hands raw material to the write target's folder and starts its learning; poll
 `documents.get(id)` until every entry of its `learning` reads `succeeded` if you need to know.
-`search` is retrieval, not an answer; `ask` is the answer. `search` takes `mode="fast"` for one
+`search` is retrieval, not an answer; `ask` is one answer the memory engine writes, and only a
+credential that holds `ask_memory` may call it (a developer key does not). `search` takes `mode="fast"` for one
 round of retrieval with no model call, for recall before every turn of an agent whose own model
 judges what it is handed. What each verb does inside the account, and what code sees when the
 person does something in the app, is on [Memory operations](/build/guides/memory-operations/).
@@ -226,7 +229,7 @@ person does something in the app, is on [Memory operations](/build/guides/memory
 
 Every list answers `{items, has_more, partial}`: the newest `limit` (1–1000, default 100),
 whether more were left out, and the Memories that could not answer. Ids are typed and opaque:
-`mem_…` a fact, `doc_…` a document, `med_…` a photo or video.
+`mem_…` a fact, `pf_…` a profile fact, `doc_…` a document, `med_…` a photo or video.
 
 
 <Tabs syncKey="lang">
@@ -235,12 +238,16 @@ whether more were left out, and the Memories that could not answer. Ids are type
 <TabItem label="Python">
 
 ```python
-client.capabilities()                           # {"actions": ["search", "memories.list", …], "memories": [{name, kind}], …}
+client.capabilities()                           # {"actions": ["search", "memories.list", …], "memories": [{name, kind}], "rules": {…}, "features": […]}
 
 client.memories.list(limit=20)                  # the newest facts, each with its mem_ id and memory_name
 client.memories.get("mem_…")
 client.memories.add("We settled on Postgres.")  # a fact; the receipt is the note it was written as (doc_…, kind "note")
 client.memories.forget("mem_…", confirm=True)
+
+client.profile_facts.list(limit=50)             # the profile tick on the key; newest first, each with source_kind
+client.profile_facts.add("Prefers dark mode.")  # Read & write; the fact, and created: false if it was already there
+client.profile_facts.forget("pf_…", confirm=True)   # Full access
 
 client.documents.list(kind="file")              # newest first; kind is "file" or "note"
 client.documents.get("doc_…")                   # with learning: [{memory_name, status}]
@@ -250,8 +257,6 @@ client.media.list()                             # photos and videos in the media
 client.media.search("someone skiing", kind="video")
 client.media.get("med_…")                       # with its moments
 client.media.delete("med_…", confirm=True)
-
-client.rules()                                  # the user's standing rules for this credential
 ```
 
 </TabItem>
@@ -268,6 +273,10 @@ await client.memories.get("mem_…");
 await client.memories.add({ content: "We settled on Postgres." });
 await client.memories.forget("mem_…", { confirm: true });
 
+await client.profileFacts.list({ limit: 50 });
+await client.profileFacts.add({ content: "Prefers dark mode." });
+await client.profileFacts.forget("pf_…", { confirm: true });
+
 await client.documents.list({ kind: "file" });
 await client.documents.get("doc_…");
 await client.documents.delete("doc_…", { confirm: true });
@@ -276,8 +285,6 @@ await client.media.list();
 await client.media.search({ q: "someone skiing", kind: "video" });
 await client.media.get("med_…");
 await client.media.delete("med_…", { confirm: true });
-
-await client.rules();
 ```
 
 </TabItem>
@@ -285,13 +292,16 @@ await client.rules();
 
 </Tabs>
 
+The standing rules for this credential (`citation_required`, `retention_notice`, `version`)
+are `rules` in `capabilities()`; there is no separate rules call.
+
 
 `memories.add` answers the note it was written as (a `doc_…` of kind `note`): remove a note
 with `documents.delete`. `memories.forget` takes the `mem_…` id of a learned fact, from
 `memories.list`, `memories.get` or a search hit of `type: "memory"`; the material it was
 learned from stays.
 
-`delete` and `forget` need a key at **Full access**. Without `confirm` nothing changes and the
+`delete` and `forget` need a key at **Full access** (`profile_facts.forget` also the profile tick). Without `confirm` nothing changes and the
 call raises `ConfirmationRequiredError` (HTTP `428 confirmation_required`), whose `details`
 name the target (`id`, `verb`, …) and carry a `how` sentence to relay to the person. Pass
 `confirm` only after they agreed; from a developer key that counts as the owner's confirmation.
@@ -311,7 +321,7 @@ One class per HTTP status, all carrying the API's error envelope: `code` (which 
 | 422 | `WriteTargetRequiredError` | `code: write_target_required`: a write from a key that reaches several text Memories and has no write target. Nothing was written; the key's owner decides where its writes go, no request can |
 | 422 | `UnprocessableEntityError` | `code: validation` for a body the API cannot take: an unknown field (a `container`, a `metadata`), a missing or mistyped field, a search `limit` outside 1–50. `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Read `code`, not only the status |
 | 428 | `ConfirmationRequiredError` | `code: confirmation_required`: a removal without `confirm`; nothing changed |
-| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `forget` and `ask`), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. The per-token limiter covers every call, `search` and `add` included; the two-turn cap does not reach them. `add` and `memories.add` also raise it with `code: quota_exceeded` when the account's storage is full or its plan is not active; retrying does not help |
+| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. The per-token limiter covers every call, `search` and `add` included; the two-turn cap does not reach them. `add` and `memories.add` also raise it with `code: quota_exceeded` when the account's storage is full or its plan is not active; retrying does not help |
 | 5xx | `InternalServerError` | retried automatically, then raised |
 | — | `APIConnectionError`, `APITimeoutError` | the request never got an answer |
 
@@ -378,25 +388,27 @@ try {
 |---|---|---|---|
 | `search(q, limit=, mode=)` | `POST /v1/search` | `search_memories` | Read |
 | `add(...)`, `documents.add(...)` | `POST /v1/documents/add` | `add_document` | Read & write |
-| `profile(q=…)` | `GET /v1/profile` | `get_profile` | Read + profile tick |
-| `ask(message)` | `POST /v1/ask` | `ask_agent` | agent exposure |
-| `rules()` | `GET /v1/rules` | `memory_rules` | Read |
-| `capabilities()` | `GET /v1/capabilities` | — | any key |
-| `memories.list(limit=)` | `GET /v1/memories` | `list_memories` (REST only) | Read |
-| `memories.get(id)` | `GET /v1/memories/{id}` | `get_memory` (REST only) | Read |
+| `ask(message)` | `POST /v1/ask` | `ask_memory` | marketplace buyer only |
+| `capabilities()` | `GET /v1/capabilities` (actions, Memories, `rules`) | `get_capabilities` | any credential |
+| `memories.list(limit=)` | `GET /v1/memories` | `list_memories` | Read |
+| `memories.get(id)` | `GET /v1/memories/{id}` | `get_memory` | Read |
 | `memories.add(content, title=)` | `POST /v1/memories/add` | `add_memory` | Read & write |
 | `memories.forget(id, confirm=True)` | `POST /v1/memories/{id}/forget` | `forget_memory` | Full access |
+| `profile_facts.list(limit=)` | `GET /v1/profile-facts` | `list_profile_facts` | Read + profile tick |
+| `profile_facts.add(content)` | `POST /v1/profile-facts/add` | `add_profile_fact` | Read & write + profile tick |
+| `profile_facts.forget(id, confirm=True)` | `POST /v1/profile-facts/{id}/forget` | `forget_profile_fact` | Full access + profile tick |
 | `documents.list(kind=, limit=)` | `GET /v1/documents` | `list_documents` | Read |
-| `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` (REST only) | Read |
+| `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` | Read |
 | `documents.delete(id, confirm=True)` | `POST /v1/documents/{id}/delete` | `delete_document` | Full access |
 | `media.list(limit=)` | `GET /v1/media` | `list_media` | Read |
 | `media.get(id)` | `GET /v1/media/{id}` | `get_media` | Read |
 | `media.search(q, kind=, limit=)` | `POST /v1/media/search` | `search_media` | Read |
 | `media.delete(id, confirm=True)` | `POST /v1/media/{id}/delete` | `delete_media` | Full access |
 
-The MCP server offers the same operations under the protocol tool names, so a model that
-learned `search_memories` in Claude is calling what your code calls `search`. Its tools still
-take a `container` and offer `list_containers`; the REST API and the SDKs have neither.
+The TypeScript names are the same in camelCase (`profileFacts.list`). The MCP server offers the
+same operations under the protocol tool names, with the same arguments and answers, so a model
+that learned `search_memories` in Claude is calling what your code calls `search`. No tool takes
+a Memory, over MCP or REST.
 
 ## Without the SDK
 

@@ -1,9 +1,9 @@
 ---
 title: "Memory operations"
-description: "Every verb of the agent protocol end to end: Memories, search, the profile, facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something."
+description: "Every verb of the agent protocol end to end: Memories, search, facts, profile facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something."
 ---
 
-Every verb of the agent protocol end to end: Memories, search, the profile, facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something.
+Every verb of the agent protocol end to end: Memories, search, facts, profile facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something.
 
 The API has a handful of nouns and verbs. This page walks them in the order a program
 meets them, says what each does inside the user's account, and what code sees when the
@@ -15,6 +15,7 @@ the TypeScript and REST shapes are on the [SDKs](/build/reference/sdk-quickstart
 |---|---|---|---|
 | **Memory** | a *Memory* | one named space of memory, with the agent that keeps it and the material it reads; `text` or `media`. Named in answers (`memory_name`), never addressed in a request | — |
 | **memory** | an item on a Memory's page | one fact a Memory learned | `mem_…` |
+| **profile fact** | a line under Settings › Your profile | one standing statement about the person (name, role, a lasting preference); the account's, not a Memory's | `pf_…` |
 | **document** | a row under a Memory's sources | one piece of raw material a Memory read: a file or page (`kind: file`), or a fact as it was said (`kind: note`) | `doc_…` |
 | **media** | a photo or video in a media Memory | one photo or video, with its moments | `med_…` |
 
@@ -40,15 +41,16 @@ several text Memories is refused on a write with `422 write_target_required`
 is a `422` too: the API refuses fields it does not know. `capabilities()` names the Memories in
 reach by name and kind, never by id; it is not permission, and every call is still checked when
 made. A Memory outside the reach cannot be told apart from one that does not exist. The
-assistant's own memory is not a Memory here: code meets it as the profile.
+assistant's own memory is not a Memory here: code meets what it knows about the person as
+profile facts.
 
 What a Memory's tile says in the app, and what it means to code:
 
 | Tile word | Meaning | In the API |
 |---|---|---|
 | *Add a source* | reads nothing yet | in reach, `list_documents` lists nothing from it |
-| *On sale* | listed on the Marketplace | buyers hold agent-endpoint credentials to it |
-| *Subscribed* | bought from someone else | `ask_agent` only; no documents, no writes |
+| *On sale* | listed on the Marketplace | buyers hold credentials that `ask_memory` it, and nothing else |
+| *Subscribed* | bought from someone else | `ask_memory` only; no passages, no documents, no writes |
 | no word | yours, reading at least one source | in reach; searches answer from what its runs learned |
 
 Renaming a Memory changes the `memory_name` answers carry; ids never change. Deleting a
@@ -95,18 +97,32 @@ each with its `mem_` id, `memory_name`, `source_time` (when it happened) and `re
 `memories.get` reads one, however old: a search can name one older than any list shows.
 Listing facts stands on the search grant, so any key that may search may list.
 
-## The profile
+## Profile facts
 
 ```python
-p = client.profile(q="working hours")
-p["static"], p["dynamic"], p["results"]
+facts = client.profile_facts.list(limit=50)
+for f in facts["items"]:
+    print(f["id"], f["source_kind"], f["content"])   # "pf_…", "user_stated", "Prefers dark mode."
+
+kept = client.profile_facts.add("Works in Lisbon, UTC+0.")
+kept["id"], kept["created"]                           # "pf_…", True; the same statement again: False
+
+client.profile_facts.forget("pf_…", confirm=True)     # {"id": "pf_…", "status": "forgotten"}
 ```
 
-The profile sits beside the Memories: the standing facts the assistant keeps about the
-person (`static`: who they are, lasting preferences) and the most recently changed ones
-(`dynamic`). `get_profile` reads it, and only on a credential whose owner ticked the profile;
-without the tick the operation is not offered at all. Read it once, near the start of a
-conversation. The assistant keeps it; there is no verb to write to it.
+The profile sits beside the Memories: a list of standing statements about the person, newest
+first. Each has its `pf_` id, `content`, `recorded_at` and `source_kind`, which says where it
+came from: `user_stated` (the owner or one of their keys said it), `imported`, or
+`model_generated` (the assistant recorded it in a conversation). The service sets
+`source_kind`; a request cannot.
+
+`profile_facts.list` needs the profile tick on the key. With the tick, what else the key may do
+follows its level: a Read & write key may `add` a statement, a Full access key may also
+`forget` one, with the same confirmation rule as forgetting a memory (`428` without
+`confirm=true`). Without the tick no profile operation is offered at all. Adding a statement
+that is already there keeps the one there (`created: false`). There is no editing: a correction
+is a new statement and the old one forgotten. List the profile once, near the start of a
+conversation.
 
 ## Add a memory
 
@@ -208,20 +224,23 @@ it arrives through the Memory's sources in the app.
 ## Ask
 
 ```python
-answer = client.ask("Summarise what the seller learned about Postgres RLS.")
+out = client.ask("Summarise what the seller learned about Postgres RLS.")
+out["answer"]       # one answer, written from the Memories in reach
+out["citations"]    # [{"memory_name": "Postgres notes"}]: the Memory, never the passages
+out["partial"]      # the Memories that could not answer
 ```
 
-`ask_agent` is the other kind of read next to search: an agent's answer from what its Memory
-learned. It answers only on a credential that **exposes** an agent, a marketplace
-subscription or a share the owner made; an ordinary developer key holds no agent, and the
-call is refused with `403 · unauthorized · tool 'agent_invoke' is not in this agent's
-capability profile`. The buyer gets answers, never files. A product that wants to put a model
-over the person's memory uses search and its own model ([Claude API](/build/integrations/claude-api/),
-[OpenAI API](/build/integrations/openai-api/)); a product that wants a Memory's own agent to answer subscribes
-to it.
+`ask` is the other kind of read next to search: the memory engine reads the Memories in reach
+and writes one answer, with no agent, no tools and no session. `citations` name the Memory the
+answer came from, never a passage. A `model` field is refused (`422`), like any field the API
+does not know.
 
-`workflow_invoke` belongs to workflow exposures, a canvas run as an endpoint, and is offered
-only over MCP on a credential that exposes one.
+`ask_memory` is held only when a credential's tool list names it, and today only a marketplace
+buyer's credential does: it reaches the one Memory bought, holds nothing else, and every call
+takes one call of the period's allowance. A developer key does not hold it at any level, and
+the call is refused with `403 · unauthorized`. A product that wants to put a model over the
+person's memory uses search and its own model ([Claude API](/build/integrations/claude-api/),
+[OpenAI API](/build/integrations/openai-api/)).
 
 ## Forget and delete
 
@@ -241,7 +260,8 @@ client.documents.delete("doc_…", confirm=True)    # {"id": "doc_…", "status"
 a search hit of `type: "memory"`. A note added with `add_memory` is a document; remove it with
 `delete_document`.
 
-Both need a Full access key, and even then they do not run on a bare call: without
+Both need a Full access key (as do `media.delete` and `profile_facts.forget`, the latter with
+the profile tick), and even then they do not run on a bare call: without
 `confirm=true` nothing changes and the answer is `428 confirmation_required`
 (`ConfirmationRequiredError`), naming the target by its public id and carrying a `how`
 sentence to relay to the person. Pass `confirm=true` only after they agreed; from a developer
@@ -258,11 +278,13 @@ those are the owner's, in the app.
 ## Rules
 
 ```python
-client.rules()
+client.capabilities()["rules"]
 ```
 
-`memory_rules` returns the user's standing rules for this credential: what the skill tells an
-AI about behaving beneath the ceiling the server enforces.
+`GET /v1/capabilities` carries the standing rules for this credential under `rules`
+(`citation_required`, `retention_notice`, `version`): what the skill tells an AI about behaving
+beneath the ceiling the server enforces. Over MCP the same answer is `get_capabilities`; there
+is no separate rules call.
 
 ## What code sees when the app does something
 
@@ -276,11 +298,11 @@ AI about behaving beneath the ceiling the server enforces.
 | deletes the Memory | its `memory_name` no longer appears; searches no longer answer from it |
 | has no working model for its agent | a failed turn, surfaced as `422 · capability_unavailable` or a search entry in `partial` (`reason: "error"`); stored memory remains, documents may wait unread. Read `code` on a `422`: `validation` there is a request the API cannot take, and `write_target_required` a write with nowhere to land, not a model problem |
 | is on the free plan with its free turns spent | `422 · capability_unavailable` with `details.reason: "dormant"` until they bring a model or move to a paid plan |
-| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits `forget_memory` and `ask_agent` (search is not held to it; `add_document` never is, its learning waits as `pending`); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
+| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits agent turns (search is not held to it; `add_document` never is, its learning waits as `pending`); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
 
 ## Rules of the road
 
-* **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
+* **Profile once, search per question.** The profile facts are few and standing; search is a turn inside the user's memory.
 * **Cite the Memory.** Every hit names its Memory (`memory_name`); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
 * **Never confirm on your own.** A delete or forget without `confirm=true` changes nothing and answers `428` with a `how` sentence; relay it and stop.

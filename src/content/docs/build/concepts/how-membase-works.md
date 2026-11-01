@@ -33,8 +33,9 @@ If processing fails, resolve the reported issue and update the Memory again.
 ## A search is a turn
 
 `search_memories` retrieves relevant passages from every Memory the credential reaches. Each
-result names its Memory (`memory_name`). `ask_agent` returns an agent's answer and is available only to credentials
-that expose an agent.
+result names its Memory (`memory_name`). `ask_memory` returns one answer the memory engine
+writes from the Memories in reach, with no agent and no tools; today only a marketplace
+buyer's credential holds it.
 
 - **Allow time for startup and retrieval.** A request after inactivity can take longer.
   The SDKs default to a 90-second timeout; some requests may need longer.
@@ -51,10 +52,13 @@ See [API troubleshooting](/build/reference/troubleshooting/) for timeouts and un
 
 ## The profile
 
-The profile holds information about the user separately from topic-specific Memories.
-`static` contains lasting information and preferences; `dynamic` contains recent context.
-Read it with `get_profile` when the credential grants profile access. The assistant keeps it;
-there is no API verb to write to it.
+The profile holds standing statements about the user (`pf_…`: name, role, lasting
+preferences) separately from topic-specific Memories. Each says where it came from
+(`source_kind`: `user_stated`, `imported` or `model_generated`). List it with
+`list_profile_facts` when the credential grants profile access; a key whose level allows
+writes may also keep a statement (`add_profile_fact`) and, at Full access, forget one
+(`forget_profile_fact`, with `confirm=true`). There is no editing: a correction is a new
+statement and the old one forgotten.
 
 ## Models
 
@@ -77,9 +81,9 @@ Developer keys have an access level, selected Memories and an expiry. MCP consen
 read access to the Memories the owner approves. Profile access is a separate setting.
 Changes to permissions apply to subsequent requests using the credential.
 
-`delete_document` and `forget_memory` require Full access and `confirm=true`; without it
-nothing changes and the answer is `428 confirmation_required`. Obtain the owner's
-confirmation before submitting either operation. Revoking a credential prevents
+`forget_memory`, `delete_document`, `delete_media` and `forget_profile_fact` require Full
+access and `confirm=true`; without it nothing changes and the answer is
+`428 confirmation_required`. Obtain the owner's confirmation before submitting one. Revoking a credential prevents
 future access through it; it does not erase results already received by an external client.
 [Authentication](/build/reference/authentication/) describes the permission rules.
 

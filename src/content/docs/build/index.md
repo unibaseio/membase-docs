@@ -17,7 +17,7 @@ empty Memory from a failed search.
 
 | Task | Guide |
 |---|---|
-| Add facts or documents, search, read the profile, forget or delete | [Memory operations](/build/guides/memory-operations/) |
+| Add facts or documents, search, keep profile facts, forget or delete | [Memory operations](/build/guides/memory-operations/) |
 | Serve multiple people | [Multi-user isolation](/build/guides/multi-user-isolation/) |
 | Configure timeouts, retries or SDK methods | [SDKs](/build/reference/sdk-quickstart/) |
 | Set access and reach, rotate or revoke a credential | [Authentication](/build/reference/authentication/) |

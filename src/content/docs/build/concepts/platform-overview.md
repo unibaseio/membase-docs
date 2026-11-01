@@ -27,8 +27,9 @@ Plain verbs: `list`, `search`, `get`, `add`, `delete`, `forget`, `ask`.
 [Memory operations](/build/guides/memory-operations/) walks them; the [API reference](/build/reference/api-reference/)
 has every operation.
 
-A **profile** sits beside the Memories: the standing facts the assistant keeps about the
-user (`static`) and the most recently changed ones (`dynamic`). `get_profile` reads it.
+A **profile** sits beside the Memories: standing statements about the user (`pf_…`), each
+with where it came from (`source_kind`). `list_profile_facts` reads it; `add_profile_fact`
+and `forget_profile_fact` keep and forget one, on a key whose level allows it.
 
 A credential reads every Memory it reaches; a write lands in the one text Memory it reaches,
 and a credential that reaches several is refused with `422 write_target_required`.
@@ -37,16 +38,16 @@ and a credential that reaches several is refused with `422 write_target_required
 
 | Screen | The person uses it to | Your code meets it as |
 |---|---|---|
-| [Home](/use/use-your-assistant/home/) | talk to the assistant, the one agent that is theirs by default; reach it on Telegram | the profile it keeps; the assistant's own memory is not a Memory here |
+| [Home](/use/use-your-assistant/home/) | talk to the assistant, the one agent that is theirs by default; reach it on Telegram | the profile facts it records (`source_kind: model_generated`); the assistant's own memory is not a Memory here |
 | [Memory](/use/manage-your-memory/memory/) | make, run and inspect Memories | `search_memories`, `list_memories`, `get_memory`, the facts `forget_memory` removes; a document's `learning` turning `succeeded` after a run |
 | [Files](/use/bring-your-material-in/files/) | keep files, and hand folders, uploads, Notion pages and captured conversations to a Memory | `add_document`, `list_documents`, `get_document`, `delete_document` |
-| [Studio](/use/advanced/studio/) | edit a Memory's pipeline canvas | nothing; a canvas run as an endpoint is `workflow_invoke` over MCP |
-| [Agents](/use/advanced/agents/) | build agents beyond the assistant | `ask_agent` on an agent-endpoint credential |
+| [Studio](/use/advanced/studio/) | edit a Memory's pipeline canvas | nothing |
+| [Agents](/use/advanced/agents/) | build agents beyond the assistant | nothing; the memory API reaches Memories, not agents |
 | [Schedules](/use/automate-and-troubleshoot/schedules/) | run Memories on a cadence | a document's `learning` turning `succeeded` without a call of yours |
 | [Activity](/use/automate-and-troubleshoot/activity/) | see what ran | the run a `202` from `add_document` started; a key's own calls are on the key's page |
 | [AI Setup](/use/account-and-models/ai-setup/) | choose the account's model | `422 · capability_unavailable` when there is none |
 | [Connect](/use/manage-your-memory/connect/) | let an AI app read Memories, mint keys | consent tokens and developer keys: [Authentication & Scopes](/build/reference/authentication/) |
-| [Marketplace](/use/share-and-trade/marketplace/) | sell and buy access to a Memory | subscriptions, `ask_agent` |
+| [Marketplace](/use/share-and-trade/marketplace/) | sell and buy access to a Memory | a buyer's credential, `ask_memory` |
 | [Settings](/use/account-and-models/settings/) | plan, export, delete | `422 · capability_unavailable` with `details.reason: "dormant"` on a free plan whose turns are spent |
 
 ## Credentials
@@ -103,10 +104,12 @@ brings a model of its own under AI Setup or moves to a paid plan.
 
 ## Marketplace
 
-A listing is an agent endpoint (or a workflow endpoint): the buyer's credential calls
-`ask_agent` (or `workflow_invoke`) and gets answers, never files. The earlier snapshot and
-live-memory listing kinds were retired and can no longer be created; a few pre-existing ones
-may still render for their buyers. Check the listing's **Included access** section.
+What is sold is a Memory, as answers (listing kind `memory`). The buyer's credential reaches
+that one Memory and holds only `ask_memory`: answers, never the passages, documents, facts or
+the seller's profile, and never a write. Every call re-checks the purchase and takes one call of
+the period's allowance. A listing sold earlier as an agent endpoint is answered by its Memory
+the same way; the other listing kinds are retired, and existing purchases are served until they
+end. Check the listing's **Included access** section.
 [Marketplace](/use/share-and-trade/marketplace/).
 
 ## Stopping and undoing
