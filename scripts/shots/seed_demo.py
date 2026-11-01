@@ -260,21 +260,19 @@ def main() -> int:
         )
         bearer = {"Authorization": f"Bearer {k['token']}"}
         for _ in range(3):
-            s.get(base + "/v1/containers", headers=bearer, timeout=60)
+            s.get(base + "/v1/capabilities", headers=bearer, timeout=60)
         s.post(
             base + "/v1/search",
             headers=bearer,
             json={"q": "how are money amounts stored"},
             timeout=180,
         )
+        s.get(base + "/v1/memories", headers=bearer, params={"limit": 5}, timeout=60)
         s.post(
-            base + "/v1/search",
+            base + "/v1/documents/doc-nope/delete",
             headers=bearer,
-            json={"q": "x", "container": reading["id"]},
+            params={"confirm": "true"},
             timeout=60,
-        )  # refused: out of reach
-        s.post(
-            base + "/v1/documents/doc-nope/delete", headers=bearer, params={"confirm": "true"}, timeout=60
         )  # refused: above the level
         log("key", k["binding_id"], k["token_hint"])
     if "ci — docs indexer" not in live:

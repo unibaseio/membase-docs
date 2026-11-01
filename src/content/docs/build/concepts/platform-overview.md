@@ -92,7 +92,7 @@ covers partial failures, deferred learning and timeouts.
 | 404 | `not_found` | an id that is not this credential's to read: outside its reach, deleted, or not one of ours |
 | 422 | `validation` | a missing, mistyped or unknown body field (`container` included); read `code` to tell it from the rows below |
 | 422 | `write_target_required` | a write from a credential that reaches several Memories |
-| 428 | `confirmation_required` | a delete or forget without `confirm=true`; nothing changed |
+| 428 | `confirmation_required` | a delete or forget without `confirm=true`; nothing changed (a credential that holds no destructive verb gets `403` first) |
 | 422 | `capability_unavailable` | the account's memory cannot run a turn here (no agent container, no model) |
 | 422 | `capability_unavailable` | with `details.reason: "dormant"`: a free-plan account whose free turns are spent |
 | 429 | `rate_limited` | the account's concurrent-turn budget, or the token's per-minute request limit; retry later |
