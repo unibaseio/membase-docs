@@ -40,9 +40,12 @@ A level is a set of operations. Each level adds to the one before it.
 
 | Level | Grant | Operations |
 |---|---|---|
-| **Read** | `read` | `list_containers`, `search_memories`, `get_profile` (with the profile tick), `list_documents`, `get_document` (REST only), `memory_rules` |
+| **Read** | `read` | `search_memories`, `list_memories` and `get_memory` (REST only), `get_profile` (with the profile tick), `list_documents`, `get_document` (REST only), `list_media`, `get_media`, `search_media`, `memory_rules`; over MCP also `list_containers` |
 | **Read & write** | `suggest` | Read, plus `add_memory`, `add_document` |
-| **Full access** | `manage` | Read & write, plus `delete_document`, `forget_memory`, each only with `confirm=true` |
+| **Full access** | `manage` | Read & write, plus `delete_document`, `forget_memory`, `delete_media`, each only with `confirm=true` |
+
+`GET /v1/capabilities` names the actions a credential holds (`actions`) and the Memories it
+reaches (`memories`). It is not permission: every call is still checked when made.
 
 `ask_agent` is on no developer key, at any level: only a credential that exposes an agent
 (a marketplace subscription, a share) holds it; from a key the call is refused with `403`
@@ -60,39 +63,45 @@ writes keep failing with `token missing required scope`. To write, create a new 
 
 ## Reach
 
-Reach is the list of Memories (containers, in the API) a credential may use. It is switched
+Reach is the list of Memories a credential may use. It is switched
 on the Connect page, on the key's page under **Memory access**, or on a Memory's own page under
 **Use in**; all three are the same switch. A key created with *All memories, including ones
-you make later* reaches every container the account has now or later.
+you make later* reaches every Memory the account has now or later.
 
 ![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means not listed and refused on the next call](/images/figures/reach-one-switch.svg)
 
-On a key limited to listed Memories, a container outside the reach is refused exactly like
-one that does not exist: `403`, `code: unauthorized`, *may not use that container*. On an
-*All memories* key, an id that is not one of the account's answers `404 · not_found`.
-`list_containers` never lists a container outside the reach, so a client cannot tell
-withheld from absent. With exactly one container in reach the `container`
-field may be omitted on `add_memory`; with more than one it is required.
+No request names a Memory. Searches and lists cover every Memory in reach and leave the
+others out; an id from a Memory outside the reach reads exactly like one that does not exist:
+`404 · not_found`. `GET /v1/capabilities` (and, over MCP, `list_containers`) never names a
+Memory outside the reach, so a client cannot tell withheld from absent.
+
+Writes land in the key's **write target**: the one text Memory it reaches. A key that reaches
+several text Memories is refused on `add_memory` and `add_document` with
+`422 write_target_required`, and nothing is written somewhere by guess. To write, mint the key
+for the Memory its writes should go to.
 
 ## The profile tick
 
 The profile is the standing facts the assistant keeps about the person: `static` (who they
 are, lasting preferences) and `dynamic` (what changed recently). It is not part of any
-container, so reach does not cover it. A credential reads it with `get_profile` only when the
+Memory, so reach does not cover it. A credential reads it with `get_profile` only when the
 owner ticked **Your profile** on the key or **Profile access** on consent. Without the
 tick the operation is not offered at all. On a consent connection the tick is set only at
 consent; to change it, the owner disconnects the app and authorizes it again.
 
 ## Destructive operations
 
-`delete_document` and `forget_memory` need Full access, and even then they do not run on
-their own: a call without `confirm=true` answers `200` with
+`delete_document`, `forget_memory` and `delete_media` need Full access, and even then they
+do not run on their own: a call without `confirm=true` changes nothing and answers
+`428 confirmation_required`, naming the target by its public id:
 
 ```json
-{ "status": "confirmation_required", "verb": "delete_document", "how": "…" }
+{ "error": { "code": "confirmation_required", "message": "Pass confirm=true to forget this memory.",
+             "details": { "id": "mem_…", "verb": "forget_memory", "content": "…", "how": "…" },
+             "retryable": false, "trace_id": "…" } }
 ```
 
-and the `how` sentence is what to relay to the person. Pass `confirm=true` only after they
+The `how` sentence is what to relay to the person. Pass `confirm=true` only after they
 agreed; from a developer key that counts as the owner's confirmation. A consent token is
 never offered these verbs at all and is read-scoped, so from an AI app the call is refused
 with `unauthorized · token missing required scope`, not answered with the sentence. A
@@ -114,10 +123,10 @@ already received or stored by an external client.
 | Answer | Meaning |
 |---|---|
 | `401` | no bearer at all (REST; the MCP endpoint differs, below) |
-| `403 · unauthorized` | an unknown, expired or revoked token; a container outside the reach; a verb above the level. The message says which. |
+| `403 · unauthorized` | an unknown, expired or revoked token, or a verb above the level. The message says which. |
 | `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key or a consent token |
 | `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `get_profile` without the profile tick |
-| `403 · unauthorized · may not use that container` | on a key limited to listed Memories: the container is outside the reach, or does not exist (an *All memories* key gets `404 · not_found` for an id that is not the account's) |
+| `404 · not_found` | an id outside the reach, deleted, of the wrong type or not one of ours: all answer alike |
 
 On the REST endpoints the status is `403` and not `401` for a bad token on purpose: the
 request was authenticated as *some* caller (the key id is in the token) and that caller is
@@ -137,9 +146,9 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 | Call | Does |
 |---|---|
-| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its containers) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
+| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its Memories) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
 | `PATCH /v1/api-keys/{id}` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
-| `PATCH /v1/exposures/{id}/views` | change its container list |
+| `PATCH /v1/exposures/{id}/views` | change its Memory list |
 | `GET /v1/api-keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
 | `DELETE /v1/exposures/{id}` | revoke it, at once |
 

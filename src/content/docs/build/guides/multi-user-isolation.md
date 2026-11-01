@@ -10,8 +10,8 @@ key, no master credential and no per-user tag inside a shared store. Every crede
 to one account, reaches only that account's Memories, and was minted by that account's owner.
 
 If you have used a memory API where you tag content with a *user id* or *container tag* and
-one key reaches them all: that is not this. Here a container is one of the person's own
-Memories (a topic such as *Project decisions*), not a tenant.
+one key reaches them all: that is not this. Here a Memory is one of the person's own
+(a topic such as *Project decisions*), not a tenant, and no request names one.
 
 ## The boundary
 
@@ -23,17 +23,15 @@ Memories (a topic such as *Project decisions*), not a tenant.
 | **Model calls** | a turn goes through the platform's inference service under the account's own model policy; a model credential never enters an agent container. |
 | **Deletion** | revoking, narrowing or deleting takes effect on the next call, ahead of any cache, projection or issued credential. |
 
-A container outside a credential's reach is refused the same way as one that does not exist,
-so a caller cannot even enumerate what it may not read: `403 · may not use that container` on
-a key limited to listed Memories. An *All memories* key reaches every container in the
-account, so an id from outside it answers `404 · not_found`.
+An id outside a credential's reach reads the same as one that does not exist (`404`), so a
+caller cannot even enumerate what it may not read.
 
 ## A product that serves many people
 
 Give each person their own Membase account, and reach their memory with a credential that
 person minted or approved. Three shapes fit most products.
 
-![One shared account with a container per user and one key is not isolation; one account per person, each with their own credential, is](/images/figures/one-account-per-person.svg)
+![One shared account with a Memory per user and one key is not isolation; one account per person, each with their own credential, is](/images/figures/one-account-per-person.svg)
 
 ### Your product is an MCP client
 
@@ -67,8 +65,10 @@ def memory_for(user) -> Membase:
 memory_for(alice).search("what did we decide about the ledger")
 ```
 
-Two rules follow. A key is refused with `403` the moment its owner narrows or revokes it, so
-treat `PermissionDeniedError` as *this user withdrew access*, not as a bug. And never route
+Two rules follow. A key is refused with `403` the moment its owner revokes it or lowers its
+level, so treat `PermissionDeniedError` as *this user withdrew access*, not as a bug; a
+Memory the owner switches off for the key drops out of its searches and lists on the next
+call. And never route
 one user's request through another user's key: the platform cannot tell, but the memory it
 answers from is the wrong person's.
 
@@ -84,8 +84,8 @@ once. See [Platform overview](/build/concepts/platform-overview/#marketplace).
 
 ## What is not isolation
 
-* **Containers are not users.** Making one container per end user inside one account puts every user's material behind one owner's credentials and one agent. Nothing stops it, and nothing protects it either.
-* **Metadata is not a filter.** `add_document` accepts `metadata` for your own bookkeeping; search does not filter on it, so it cannot separate people.
+* **Memories are not users.** Making one Memory per end user inside one account puts every user's material behind one owner's credentials and one agent. Nothing stops it, and nothing protects it either.
+* **Metadata is not a filter.** Search has no metadata filters and `add_document` refuses a `metadata` field (`422`); `custom_id` is your own bookkeeping and cannot separate people.
 * **Reach is not a secret.** A key with *All memories* reaches Memories the user makes later. Say so when you ask for one.
 
 ## Checking it
@@ -94,8 +94,9 @@ The negative cases are the ones to test:
 
 | Try | Expect |
 |---|---|
-| a container id from another account, with your key | `403 · unauthorized · may not use that container` on a key limited to listed Memories; `404 · not_found` on an *All memories* key |
-| a container the owner switched off for the key | the same `403`, on the very next call |
+| a `doc_…` or `mem_…` id from another account, with your key | `404 · not_found` |
+| a Memory the owner switched off for the key | on the very next call, searches and lists leave it out and its ids answer `404` |
 | a revoked key | `403 · unauthorized` on every call, at once |
 | `delete_document` on a Read & write key | `403 · unauthorized · not in this agent's capability profile` |
-| `delete_document` on a Full access key without `confirm` | `200 · status: confirmation_required` |
+| `delete_document` on a Full access key without `confirm` | `428 · confirmation_required`; nothing changed |
+| `add_memory` on a key that reaches several text Memories | `422 · write_target_required`; nothing written |

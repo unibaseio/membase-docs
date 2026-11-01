@@ -35,7 +35,7 @@ agent that answers from the seller's Memory; check its **Included access** befor
 Adding or syncing a source makes material available to a Memory. Select **Update now** to
 process it, or configure a schedule. Check the run's **Report** to see whether it completed.
 A document added through the API with `add_document` starts learning on its own; poll the
-document until `learned` is true.
+document until its `learning` status reads `succeeded`.
 
 ## Stopping and undoing
 

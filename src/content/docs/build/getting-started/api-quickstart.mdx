@@ -21,22 +21,26 @@ In the app, open **Connect › Skills › Manage keys › Create key**. Name the
 Choose an expiry and create the key. Copy the token while it is shown; it is shown only once.
 The profile permission is optional and is not needed for this example.
 
+One Memory matters: no request names a Memory, so a write lands in the key's write target, the
+one text Memory it reaches. A key that reaches several is refused with
+`422 write_target_required` and nothing is written.
+
 ```bash
 export MEMBASE_API_KEY="mbk_…"
 ```
 
 The [key guide](/use/manage-your-memory/connect/#developer-keys) explains rotation and
-revocation. The curl example and the SDKs (from `unibaseio-membase` 0.3.3 and
-`@unibaseio/membase` 0.3.2) call `https://api.app.membase.com`; older SDK releases default to
-`https://api.app.membase.ai`, which serves the same API. Point either SDK elsewhere with
-`base_url` / `baseUrl` or `MEMBASE_BASE_URL`.
+revocation. The curl example and the SDKs call `https://api.app.membase.com`. Point either SDK
+elsewhere with `base_url` / `baseUrl` or `MEMBASE_BASE_URL`.
 
 ## 2. Add, wait, then search
 
-`add` returns `202` when material is accepted; it does not promise that learning has finished.
-Check `documents.get(id).learned` before searching for the new content. The examples stop
-when the learning run fails, is refused (the Memory's daily run budget is spent) or is canceled,
-and have a polling limit, so they cannot wait indefinitely.
+`add` returns `202` with a receipt (`{id, kind, status, learning}`) when material is accepted;
+it does not promise that learning has finished. Read `documents.get(id)` until every entry of
+its `learning` is `succeeded` before searching for the new content. The status is `pending`
+while it waits for a run, `processing` while one reads it and `failed` when the run failed. The
+examples stop on a failed learning run and have a polling limit, so they cannot wait
+indefinitely.
 
 
 <Tabs syncKey="lang">
@@ -44,48 +48,43 @@ and have a polling limit, so they cannot wait indefinitely.
 
 <TabItem label="Python">
 
-Install with `pip install unibaseio-membase`, save this as `quickstart.py`, and run
-`python quickstart.py` in the shell where you exported the key.
+Install with `pip install unibaseio-membase` (0.4.0 or newer), save this as `quickstart.py`,
+and run `python quickstart.py` in the shell where you exported the key.
 
 ```python
 import time
 from membase import Membase
 
 client = Membase()
-containers = client.containers.list()["containers"]
-if len(containers) != 1:
-    raise RuntimeError("For this example, select exactly one Memory under Memory access on the key's page.")
-container = containers[0]["id"]
 custom_id = "quickstart-ledger-v1"
 
 added = client.add(
     "We chose Postgres for the Lumen ledger.",
-    container=container,
     title="Lumen decision",
     custom_id=custom_id,
 )
-document_id = added.get("document_id")
+document_id = added["id"]
 if not document_id:
-    raise RuntimeError(f"Accepted at {added.get('path')}, but the document id is pending. See API troubleshooting.")
+    raise RuntimeError("Accepted, but the document id is pending. See API troubleshooting.")
 
 for _ in range(60):
-    document = client.documents.get(document_id)
-    if document.get("learned"):
+    learning = client.documents.get(document_id).get("learning") or []
+    statuses = {entry["status"] for entry in learning}
+    if learning and statuses == {"succeeded"}:
         break
-    status = (document.get("learning_run") or {}).get("status")
-    if status in {"failed", "refused", "canceled"}:
-        raise RuntimeError("Learning stopped. Open the Memory's Report in the app.")
+    if "failed" in statuses:
+        raise RuntimeError("Learning failed. Open the Memory's Report in the app.")
     time.sleep(5)
 else:
     raise TimeoutError("Still unread. Check the Memory's Report and model settings before retrying.")
 
-found = client.search("Which database did we choose for the Lumen ledger?", container=container)
-errors = [c for c in found["containers"] if c.get("error")]
+found = client.search("Which database did we choose for the Lumen ledger?")
+errors = [p for p in found["partial"] if p["reason"] == "error"]
 if errors:
     raise RuntimeError(f"Some Memories could not answer: {errors}")
-for hit in found["results"]:
-    print(hit["container_name"], "·", hit["content"])
-if not found["results"]:
+for hit in found["items"]:
+    print(hit["memory_name"], "·", hit["content"])
+if not found["items"]:
     print("No matching passages. Inspect the Memory and its latest Report in the app.")
 ```
 
@@ -95,8 +94,8 @@ if not found["results"]:
 
 <TabItem label="TypeScript">
 
-Install with `npm install @unibaseio/membase` and run this in a server-side TypeScript project
-on Node 18 or newer. The package is ESM-only and the example uses top-level `await`, so the
+Install with `npm install @unibaseio/membase` (0.4.0 or newer) and run this in a server-side
+TypeScript project on Node 18 or newer. The package is ESM-only and the example uses top-level `await`, so the
 project must be an ES module: `"type": "module"` in `package.json`, or save the file as
 `quickstart.mts`. Keep the key on the server, outside browser bundles.
 
@@ -104,36 +103,30 @@ project must be an ES module: `"type": "module"` in `package.json`, or save the 
 import { Membase } from "@unibaseio/membase";
 
 const client = new Membase();
-const { containers } = await client.containers.list();
-if (containers.length !== 1) {
-  throw new Error("For this example, select exactly one Memory under Memory access on the key's page.");
-}
-const container = containers[0].id;
 const customId = "quickstart-ledger-v1";
 const added = await client.add({
   content: "We chose Postgres for the Lumen ledger.",
-  container, title: "Lumen decision", customId,
+  title: "Lumen decision", customId,
 });
-const documentId = added.document_id;
-if (!documentId) throw new Error(`Accepted at ${added.path}; document id pending. See API troubleshooting.`);
+const documentId = added.id;
+if (!documentId) throw new Error("Accepted; document id pending. See API troubleshooting.");
 let learned = false;
 
 for (let attempt = 0; attempt < 60; attempt++) {
-  const document = await client.documents.get(documentId);
-  if (document.learned) { learned = true; break; }
-  const run = document.learning_run as { status?: string } | undefined;
-  if (run?.status === "failed" || run?.status === "refused" || run?.status === "canceled") {
-    throw new Error("Learning stopped. Open the Memory's Report in the app.");
+  const { learning = [] } = await client.documents.get(documentId);
+  if (learning.length && learning.every(entry => entry.status === "succeeded")) { learned = true; break; }
+  if (learning.some(entry => entry.status === "failed")) {
+    throw new Error("Learning failed. Open the Memory's Report in the app.");
   }
   await new Promise(resolve => setTimeout(resolve, 5000));
 }
 if (!learned) throw new Error("Still unread. Check the Memory's Report and model settings.");
 
-const found = await client.search({ q: "Which database did we choose for the Lumen ledger?", container });
-const errors = found.containers.filter(c => c.error);
+const found = await client.search({ q: "Which database did we choose for the Lumen ledger?" });
+const errors = found.partial.filter(p => p.reason === "error");
 if (errors.length) throw new Error(JSON.stringify(errors));
-for (const hit of found.results) console.log(hit.container_name, "·", hit.content);
-if (!found.results.length) console.log("No matching passages. Inspect the Memory and its Report.");
+for (const hit of found.items) console.log(hit.memory_name, "·", hit.content);
+if (!found.items.length) console.log("No matching passages. Inspect the Memory and its Report.");
 ```
 
 </TabItem>
@@ -149,14 +142,12 @@ shell where you exported the key. A failed HTTP request stops the script.
 set -euo pipefail
 BASE=https://api.app.membase.com
 AUTH="Authorization: Bearer $MEMBASE_API_KEY"
-containers=$(curl --fail-with-body -sS "$BASE/v1/containers" -H "$AUTH")
-container=$(jq -er '.containers | if length == 1 then .[0].id else error("Select exactly one Memory under Memory access on the key") end' <<< "$containers")
 custom_id=quickstart-ledger-v1
-payload=$(jq -n --arg container "$container" --arg id "$custom_id" \
-  '{container: $container, content: "We chose Postgres for the Lumen ledger.", title: "Lumen decision", custom_id: $id}')
+payload=$(jq -n --arg id "$custom_id" \
+  '{content: "We chose Postgres for the Lumen ledger.", title: "Lumen decision", custom_id: $id}')
 added=$(curl --fail-with-body -sS "$BASE/v1/documents" -H "$AUTH" \
   -H 'Content-Type: application/json' -d "$payload")
-document_id=$(jq -r '.document_id // empty' <<< "$added")
+document_id=$(jq -r '.id // empty' <<< "$added")
 if [ -z "$document_id" ]; then
   echo "Accepted, but document id pending. See API troubleshooting." >&2
   exit 1
@@ -164,16 +155,14 @@ fi
 learned=false
 
 for ((attempt=0; attempt<60; attempt++)); do
-  if [ -n "$document_id" ]; then
-    document=$(curl --fail-with-body -sS "$BASE/v1/documents/$document_id" -H "$AUTH")
-    if jq -e '.learned == true' <<< "$document" >/dev/null; then
-      learned=true
-      break
-    fi
-    if jq -e '.learning_run.status | IN("failed", "refused", "canceled")' <<< "$document" >/dev/null; then
-      echo "Learning stopped. Open the Memory's Report in the app." >&2
-      exit 1
-    fi
+  document=$(curl --fail-with-body -sS "$BASE/v1/documents/$document_id" -H "$AUTH")
+  if jq -e '(.learning | length > 0) and all(.learning[]; .status == "succeeded")' <<< "$document" >/dev/null; then
+    learned=true
+    break
+  fi
+  if jq -e 'any(.learning[]; .status == "failed")' <<< "$document" >/dev/null; then
+    echo "Learning failed. Open the Memory's Report in the app." >&2
+    exit 1
   fi
   sleep 5
 done
@@ -181,11 +170,10 @@ if [ "$learned" != true ]; then
   echo "Still unread. Check the Memory's Report and model settings." >&2
   exit 1
 fi
-payload=$(jq -n --arg container "$container" \
-  '{container: $container, q: "Which database did we choose for the Lumen ledger?"}')
+payload=$(jq -n '{q: "Which database did we choose for the Lumen ledger?"}')
 found=$(curl --fail-with-body -sS "$BASE/v1/search" -H "$AUTH" \
   -H 'Content-Type: application/json' -d "$payload")
-jq -e 'if any(.containers[]; .error) then error("A Memory could not answer; inspect containers[].error") else . end' <<< "$found"
+jq -e 'if any(.partial[]; .reason == "error") then error("A Memory could not answer; inspect partial") else . end' <<< "$found"
 ```
 
 </TabItem>
@@ -197,10 +185,12 @@ jq -e 'if any(.containers[]; .error) then error("A Memory could not answer; insp
 ## 3. Check the result
 
 Expect a passage naming Postgres and the Memory it came from. The exact wording can vary.
-An empty `results` list is not enough to diagnose a problem: inspect `containers[].error`
-first, then the Memory's learned content and latest **Report**.
+An empty `items` list is not enough to diagnose a problem: inspect `partial` first (a Memory
+named there with `reason: "error"` could not answer), then the Memory's learned content and
+latest **Report**.
 
-Re-running this example with the same `custom_id` does not add a second copy. If learning was
+Re-running this example with the same `custom_id` does not add a second copy: the receipt
+names the document already there. If learning was
 deferred or failed, fix the cause and run **Update now** in the app; resending the same document
 is not a way to force another learning run. See [API troubleshooting](/build/reference/troubleshooting/).
 

@@ -13,9 +13,9 @@ Base URL `https://api.app.membase.com`. Every request: `Authorization: Bearer <d
 
 | Level | Tools |
 |---|---|
-| Read (`read`) | `list_containers`, `search_memories`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent` |
-| Read & write (`suggest`) | `list_containers`, `search_memories`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent`, `add_memory`, `add_document` |
-| Full access (`manage`) | `list_containers`, `search_memories`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent`, `add_memory`, `add_document`, `delete_document`, `forget_memory` |
+| Read (`read`) | `list_containers`, `search_memories`, `list_memories`, `get_memory`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent`, `list_media`, `get_media`, `search_media` |
+| Read & write (`suggest`) | `list_containers`, `search_memories`, `list_memories`, `get_memory`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent`, `add_memory`, `add_document`, `list_media`, `get_media`, `search_media` |
+| Full access (`manage`) | `list_containers`, `search_memories`, `list_memories`, `get_memory`, `get_profile`, `list_documents`, `get_document`, `memory_rules`, `ask_agent`, `add_memory`, `add_document`, `delete_document`, `forget_memory`, `list_media`, `get_media`, `search_media`, `delete_media` |
 | Invoke (`invoke`) | `workflow_invoke` |
 
 A level is the ceiling of what a credential of that kind may hold. A developer key holds every Read tool except `ask_agent`, which only an agent exposure (a marketplace subscription, a share) grants; `get_profile` is granted only when the owner ticked the profile on the key or on consent. A consent-minted client holds `list_containers`, `search_memories` and, when ticked, `get_profile` — nothing else: a verb outside a credential's tools is not offered in `tools/list` and is refused with `403` when called.
@@ -26,13 +26,7 @@ A level is the ceiling of what a credential of that kind may hold. A developer k
 
 level **Read**; read-only.
 
-`GET /v1/containers`
-
-The containers this credential may use — every one, for the account's owner.
-
-_No parameters._
-
-Answers `200` with a JSON object.
+MCP only: the Memories this credential may use, for the MCP tools that still take `container`. Over REST, `GET /v1/capabilities` names the Memories in reach (`memories`) and the actions the credential holds (`actions`).
 
 ### `search_memories` — Search memories
 
@@ -40,13 +34,41 @@ level **Read**; read-only.
 
 `POST /v1/search`
 
-Passages the containers hold on a question, most relevant first, each naming its container. Retrieval, not an answer — `POST /v1/ask` is the agent's answer.
+Passages the Memories in reach hold on a question, most relevant first. A Memory that could not answer, or whose passages all lost to `limit`, is named in `partial`.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `container` | string or null | no | One container id; omit to search every container in reach. |
-| `limit` | integer (1–50) or null | no | How many passages to return in all, not per container. A fan-out over five containers with limit 5 answers with five passages, taking each container's best before any container's second. Unset covers every container in reach (at least 8), so none is left unheard; a container that had passages but lost them all to the budget comes back with `truncated: true`. |
+| `limit` | integer (1–50) or null | no | How many passages in all. |
+| `mode` | string | no | `full`: the engine's whole retrieval. `fast`: one round, no model call. |
 | `q` | string | yes | The question, in natural language. |
+
+Answers `200` with a JSON object.
+
+### `list_memories` — List memories
+
+level **Read**; read-only; REST only.
+
+`GET /v1/memories`
+
+The newest facts the Memories in reach hold — newest by when it happened, the engine's own order. `has_more` says more were left out; a Memory that could not answer is named in `partial` and the others are still listed.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `limit (query)` | integer (1–1000) or null | no | How many, newest first; default 100. |
+
+Answers `200` with a JSON object.
+
+### `get_memory` — Get one memory
+
+level **Read**; read-only; REST only.
+
+`GET /v1/memories/{memory_id}`
+
+One fact, at any age: a search can name one older than any list shows.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `memory_id (path)` | string | yes |  |
 
 Answers `200` with a JSON object.
 
@@ -70,11 +92,12 @@ level **Read**; read-only.
 
 `GET /v1/documents`
 
-The documents the containers in reach have read, newest first.
+The material the Memories in reach were given, newest first; every kind unless `kind` narrows it (a kind added later is listed too).
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `container (query)` | string or null | no | One container id. |
+| `kind (query)` | string or null | no | `file` or `note`; omit for every kind. |
+| `limit (query)` | integer (1–1000) or null | no | How many, newest first; default 100. |
 
 Answers `200` with a JSON object.
 
@@ -84,7 +107,7 @@ level **Read**; read-only; REST only.
 
 `GET /v1/documents/{document_id}`
 
-One document, with whether its container has learned it yet.
+One document, with how far each Memory got in learning it.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -125,13 +148,11 @@ level **Read & write**.
 
 `POST /v1/memories`
 
-Save one fact. Static facts go to the user's profile; the rest to a container.
+Save one fact into this credential's write target. The answer is the note it was written as — a document of kind `note`; poll `GET /v1/documents/{id}` for its learning.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `container` | string or null | no | Which container keeps it; required when more than one. |
-| `content` | string | yes | The fact, as the user said it. |
-| `static` | boolean | no | A standing fact about the user themselves. |
+| `content` | string | yes | The fact, as said. |
 | `title` | string | no |  |
 
 Answers `202 Accepted` with a JSON object.
@@ -142,14 +163,12 @@ level **Read & write**.
 
 `POST /v1/documents`
 
-Hand a document (text or url) to a container. Lands at once; learned in the background — poll `GET /v1/documents/{id}` for `learned`.
+Hand in a document (text or a url) to this credential's write target.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `container` | string | yes | Which container reads it. |
 | `content` | string or null | no | The document's full text. |
 | `custom_id` | string | no | Your own id; adding the same custom_id again is a no-op. |
-| `metadata` | object or null | no | Your own tags, as an object. |
 | `title` | string | no |  |
 | `url` | string or null | no | A public web address to fetch instead. |
 
@@ -161,12 +180,12 @@ level **Full access**; **destructive** — `confirm=true` from a developer key, 
 
 `DELETE /v1/documents/{document_id}`
 
-Remove one document everywhere. Full access only: without `confirm=true` the answer is a request (`status: confirmation_required`); with it, a developer key deletes.
+Withdraw a document and what every Memory learned from it.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `document_id (path)` | string | yes |  |
-| `confirm (query)` | boolean | no | Developer keys: true to delete. |
+| `confirm (query)` | boolean | no | Developer keys with Full access: true to carry it out. Without it the answer is `428 confirmation_required` and nothing changes. |
 
 Answers `200` with a JSON object.
 
@@ -176,13 +195,71 @@ level **Full access**; **destructive** — `confirm=true` from a developer key, 
 
 `DELETE /v1/memories/{memory_id}`
 
-Forget one learned fact. Same confirmation rule as deleting a document.
+Forget one learned fact; the material it was learned from stays.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `memory_id (path)` | string | yes |  |
-| `container (query)` | string or null | no | The container holding it. |
-| `confirm (query)` | boolean | no | Developer keys: true to forget. |
+| `confirm (query)` | boolean | no | Developer keys with Full access: true to carry it out. Without it the answer is `428 confirmation_required` and nothing changes. |
+
+Answers `200` with a JSON object.
+
+### `list_media` — List photos and videos
+
+level **Read**; read-only.
+
+`GET /v1/media`
+
+The photos and videos the media Memories in reach hold, newest first.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `limit (query)` | integer (1–1000) or null | no | How many, newest first; default 100. |
+
+Answers `200` with a JSON object.
+
+### `get_media` — Get one photo or video
+
+level **Read**; read-only.
+
+`GET /v1/media/{media_id}`
+
+One photo or video with its moments: shots and spoken lines with their times (`t`/`end` in seconds), speakers and thumbnails.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `media_id (path)` | string | yes |  |
+
+Answers `200` with a JSON object.
+
+### `search_media` — Search photos and videos
+
+level **Read**; read-only.
+
+`POST /v1/media/search`
+
+Photos and videos matching what was seen or said, best first, each with the moments that matched.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `kind` | string or null | no | `image` or `video`; omit for both. |
+| `limit` | integer or null | no | How many items in all. |
+| `q` | string | yes | What was seen or said, in any language. |
+
+Answers `200` with a JSON object.
+
+### `delete_media` — Delete a photo or video
+
+level **Full access**; **destructive** — `confirm=true` from a developer key, or a request.
+
+`DELETE /v1/media/{media_id}`
+
+Forget a photo or video and remove its file.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `media_id (path)` | string | yes |  |
+| `confirm (query)` | boolean | no | Developer keys with Full access: true to carry it out. Without it the answer is `428 confirmation_required` and nothing changes. |
 
 Answers `200` with a JSON object.
 
@@ -211,13 +288,14 @@ Still answered for the credentials and clients that carry them; hidden from `too
 
 | Status | Code | When |
 |---|---|---|
-| 400 | `validation` | an empty `q`; both or neither of `content` and `url`; `container` omitted when more than one is in reach |
+| 400 | `validation` | an empty `q`; both or neither of `content` and `url`; a `limit` out of range |
 | 401 | `unauthenticated` | no `Authorization: Bearer` header at all |
-| 403 | `unauthorized` | the key or token is invalid, expired or revoked (or the account suspended); the container is outside the credential's reach; or the verb is above its access level |
-| 404 | `not_found` | unknown document or memory |
-| 409 | `conflict` | `add_document` / `add_memory`: the container's upload folder could not be made — rename the container and retry |
-| 422 | `validation` | a malformed body: a required field missing or of the wrong type |
+| 403 | `unauthorized` | the key or token is invalid, expired or revoked (or the account suspended), or the verb is above its access level |
+| 404 | `not_found` | an id that is not this credential's to read: outside its reach, deleted, of the wrong type or not one of ours |
+| 422 | `validation` | a body the API cannot take: a required field missing or of the wrong type, or a field it does not know (a `container` included) |
+| 422 | `write_target_required` | `add_document` / `add_memory` from a credential that reaches several text Memories; nothing was written |
 | 422 | `capability_unavailable` | the account's memory cannot run a turn here (no agent container, no model) |
+| 428 | `confirmation_required` | a destructive verb without `confirm=true`; nothing changed, and `details` name the target (`id`, `verb`) with a `how` sentence to relay |
 | 429 | `rate_limited` | the account's concurrent-turn budget, or too many requests on one credential |
 
-On the MCP endpoint a missing, invalid, expired or revoked bearer answers `401` with an OAuth challenge (`WWW-Authenticate`) instead, so a client can authorize again. Read `code`, not only the status: `422` is either. A Full-access developer key calling a destructive verb without `confirm=true` answers `200` with `{"status": "confirmation_required", "how": …}` rather than an error.
+On the MCP endpoint a missing, invalid, expired or revoked bearer answers `401` with an OAuth challenge (`WWW-Authenticate`) instead, so a client can authorize again. Read `code`, not only the status: `422` is several things. Lists answer `{items, has_more, partial}`; a Memory that could not answer is named in `partial` on a `200`.

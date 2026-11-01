@@ -29,10 +29,11 @@ Reach is the list of Memories a credential may use. It has one state and three v
 the **Uses** card on the client's page in Connect, the **Use in** card on the Memory's page,
 and the **Memory access** switches on a key's page. Off takes effect on the very next call.
 
-![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means 403 and not listed on the next call](/images/figures/reach-one-switch.svg)
+![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means not listed and refused on the next call](/images/figures/reach-one-switch.svg)
 
-A Memory outside the reach is refused the same way as one that does not exist: *may not use
-that container* (`403` over REST, a tool error over MCP). `list_containers` does not list it.
+A Memory outside the reach is refused the same way as one that does not exist: over MCP a
+tool error, *may not use that container*; over REST its ids answer `404` and searches and
+lists leave it out. Neither `list_containers` (MCP) nor `GET /v1/capabilities` (REST) names it.
 A client cannot tell withheld from absent, and cannot ask for more; only the person can switch
 it on.
 
@@ -48,8 +49,9 @@ per level is on [Authentication & Scopes](/build/reference/authentication/#acces
 ## Destructive verbs
 
 `delete_document` and `forget_memory` exist only at Full access, and even there they do not
-execute on a bare call: without `confirm=true` the answer is `status: confirmation_required`
-with a `how` sentence for the model to relay. A consent-minted client is never offered
+execute on a bare call: without `confirm=true` nothing changes and the answer is
+`status: confirmation_required` over MCP (`428 confirmation_required` over REST) with a `how`
+sentence for the model to relay. A consent-minted client is never offered
 these verbs, and a call is refused (a tool error, *token missing required scope*; `403` over
 REST) rather than answered with the sentence. From a Full access key, `confirm=true` counts as
 the owner's confirmation, which is why the skill tells the AI to pass it only after the
@@ -90,6 +92,6 @@ leave it.
 
 Because the server enforces the ceiling, the skill's rules are about behaving well beneath
 it: read the profile first when it is granted; search before answering about the person's
-past work; cite the container a result came from; save only what the person supplied; never
+past work; cite the Memory a result came from; save only what the person supplied; never
 pass `confirm` on the model's own initiative; treat `403` as withdrawn access and ask the
 person rather than retry.

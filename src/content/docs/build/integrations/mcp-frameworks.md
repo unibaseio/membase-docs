@@ -39,14 +39,17 @@ npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 
 Three requests cover most integrations: `GET /v1/profile`, `POST /v1/search` with `{"q": …}`
-and `POST /v1/memories` with `{"content": …}`, each with the bearer header.
+and `POST /v1/memories` with `{"content": …}`, each with the bearer header. No request names a
+Memory: a search answers `{items, partial}` across every Memory the key reaches, each passage
+naming its `memory_name`, and a write lands in the key's write target (a key that reaches
+several text Memories is refused with `422 write_target_required`).
 
 ## Rules that hold in every shape
 
 * **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
-* **Cite the container.** Every hit names `container_name`; say where an answer came from.
+* **Cite the Memory.** Every hit names the Memory it came from (`memory_name` over REST and the SDKs, `container_name` from the MCP tools); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
-* **Never confirm on your own.** On a Full access key, a delete or forget without `confirm=true` answers with a `how` sentence; relay it and stop.
+* **Never confirm on your own.** On a Full access key, a delete or forget without `confirm=true` changes nothing and answers with a `how` sentence (over REST, a `428 confirmation_required`); relay it and stop.
 * **Treat `403` as withdrawn access.** The owner narrowed or revoked the key; do not retry with it.
 * **Expect the first search to be slow.** Up to a minute after a quiet spell; keep the SDK's timeout.
 
