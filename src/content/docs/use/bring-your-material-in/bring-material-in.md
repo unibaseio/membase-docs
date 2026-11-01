@@ -16,7 +16,7 @@ your assistant follows a different path: it can save what matters during the con
 | A folder in your Files | a project, a vault, anything already on disk | memory page › Add card › **Your Files › Choose** |
 | Upload | a handful of files | memory page › Add card › **Upload files › Upload** |
 | [Notion](/use/bring-your-material-in/notion/) | pages and databases | memory page › Add card › **Notion** (where available) |
-| [Browser extension](/use/bring-your-material-in/browser-extension/) | your chats with other assistants | memory page › Add card › **Unibase memory** |
+| [Browser extension](/use/bring-your-material-in/browser-extension/) | your chats with other assistants | memory page › Add card › **Membase extension** |
 | Talking to your assistant | what you tell it, decide with it, ask it | Home, or Telegram |
 
 ## A folder in your Files
@@ -43,12 +43,12 @@ Connect a workspace, select the pages or databases the Memory should read, and a
 A sync fetches those pages; the Memory still needs a run to learn from them. Follow the
 [Notion guide](/use/bring-your-material-in/notion/) for authorization, page selection, updates and disconnection.
 
-## Unibase memory
+## Membase extension
 
-The Unibase Memory browser extension captures your conversations with other assistants and
+The Membase browser extension captures your conversations with other assistants and
 hands them to a memory as a source.
 
-1. Press **Install** on *Unibase memory*. A **Connect Unibase Memory** dialog opens; if the
+1. Press **Install** on *Membase extension*. A **Connect Membase extension** dialog opens; if the
    extension is not installed yet, use its **Install browser extension** link and sign the
    extension in with the same wallet.
 2. Press **Connect wallet** and approve the two signatures. The door says *Added* and the source

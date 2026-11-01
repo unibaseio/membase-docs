@@ -1,16 +1,16 @@
 ---
 title: "Browser extension"
-description: "Unibase Memory, the browser extension that captures the person's conversations with other assistants and hands them to a Memory as a source."
+description: "The Membase browser extension, which captures the person's conversations with other assistants and hands them to a Memory as a source."
 ---
 
-Unibase Memory, the browser extension that captures the person's conversations with other assistants and hands them to a Memory as a source.
+The Membase browser extension, which captures the person's conversations with other assistants and hands them to a Memory as a source.
 
-**Unibase Memory** is a browser extension. It captures the person's conversations with other
+**Membase extension** is a browser extension. It captures the person's conversations with other
 AI assistants as they happen and hands them to Membase, where a Memory reads them as a
 source. Use this to bring conversations into memory. To let an AI app read existing memory, follow
 [Connect your AI](/connect/).
 
-* Chrome Web Store: [Unibase Memory](https://chromewebstore.google.com/detail/edmncknbiihfoakimejbepnaeemaaamf)
+* Chrome Web Store: [Membase](https://chromewebstore.google.com/detail/edmncknbiihfoakimejbepnaeemaaamf)
 
 ## What it captures
 
@@ -23,7 +23,7 @@ assistants are captured is the extension's own setting.
 
 In the app, on a Memory's page, the Add card has a door for it:
 
-1. Press **Install** on *Unibase memory*. A **Connect Unibase Memory** dialog opens. If the
+1. Press **Install** on *Membase extension*. A **Connect Membase extension** dialog opens. If the
    extension is not installed yet, use the dialog's **Install browser extension** link and sign
    the extension in with the same wallet as the app.
 2. Press **Connect wallet** and approve the two signatures in your wallet (an embedded wallet

@@ -32,7 +32,7 @@ You are on the memory's page. Its hero shows the name, an **Update now** button 
 ## 2. Add something to it
 
 The **Add to this memory** card ③ includes **Upload files**, **Your Files** and
-**Unibase memory**. Where available, **Notion** is another option; this walkthrough uses a file.
+**Membase extension**. Where available, **Notion** is another option; this walkthrough uses a file.
 
 ![A memory's page](/images/shots/memory-page.png)
 

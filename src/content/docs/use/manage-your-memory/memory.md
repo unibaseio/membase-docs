@@ -29,7 +29,7 @@ The Assistant's own memory is always the first tile. The home page lists the Mem
 3. **Settings.** Configure the name, instructions, sources, schedule and sharing in one dialog.
 4. **Delete…** Says first the one irreversible thing (everything the memory learned goes with it),
    then what depends on it.
-5. **Add to this memory.** Choose Unibase memory, Upload files, Your Files, or Notion where
+5. **Add to this memory.** Choose Membase extension, Upload files, Your Files, or Notion where
    available. Sources you added are listed below with a **Remove** per row.
    [Sources](/use/bring-your-material-in/bring-material-in/) explains each option.
 
@@ -95,8 +95,8 @@ Below: **Sharing** (apps as switches, what depends on this memory, **Sell** / **
 Each source has its own page, opened from its row under the Add card.
 
 1. **Hero.** The source and its path. A folder in your Files is read in place, so there is
-   nothing to sync, and **Disconnect…** is its one verb. A connector source (Notion, Unibase
-   memory) shows a status word here instead, with **Sync now** (**Retry** after a failed sync),
+   nothing to sync, and **Disconnect…** is its one verb. A connector source (Notion, Membase
+   extension) shows a status word here instead, with **Sync now** (**Retry** after a failed sync),
    **Reauthorize** or **Reconnect** when they apply, plus **Manage…** and **Delete…**.
 2. **Read by.** Which memories learn from this source.
 

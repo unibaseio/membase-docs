@@ -16,7 +16,7 @@ chat. It can use the memories and skills selected in its settings.
 reading notes. Set what it should retain, add sources, and choose a schedule if needed.
 
 **Source.** Material a Memory learns from: a folder in Files, uploaded documents, selected
-Notion pages, or conversations imported through the Unibase Memory browser extension.
+Notion pages, or conversations imported through the Membase browser extension.
 
 **Files.** Your file manager. Organize documents into folders and connect a folder to a
 Memory. System folders such as Generated, Assets and Trash have separate purposes and controls.
