@@ -1,9 +1,9 @@
 ---
 title: "Platform overview"
-description: "The hosted Membase at app.membase.com as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone."
+description: "The hosted Membase at app.membase.com as your code meets it: the nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone."
 ---
 
-The hosted Membase at app.membase.com as your code meets it: the three nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone.
+The hosted Membase at app.membase.com as your code meets it: the nouns, what each screen of the app is to the API, credentials, one account per person, limits, the Marketplace, and what can be undone.
 
 The Memory Platform is the hosted Membase at `https://app.membase.com`. A person hands it
 material once; it keeps a living memory of that material; every AI they connect, and every
@@ -12,38 +12,42 @@ key they mint, reads the same memory. The mechanism is on
 someone whose code will meet what the person sees. The screens themselves, one page each,
 are in the **Use Membase** tab.
 
-## The three nouns
+## The nouns
 
 | API | In the app | What it is |
 |---|---|---|
-| **container** | a *Memory* | one named space of memory, with the agent that keeps it and the material it reads |
-| **memory** | an item on a Memory's page | one fact the container holds, or one fact of the user's profile |
-| **document** | a row under a Memory's sources | one piece of raw material a container read: a file, a note, a page |
+| **Memory** (`memory_name` in answers) | a *Memory* | one named space of memory, with the agent that keeps it and the material it reads. Named in answers, never addressed in a request |
+| **memory** (`mem_…`) | an item on a Memory's page | one fact a Memory learned |
+| **document** (`doc_…`) | a row under a Memory's sources | one piece of material handed in: a file or a page (`kind: file`), or a fact as it was said (`kind: note`) |
+| **media** (`med_…`) | a photo or video in a media Memory | what was seen or said in it, with its moments |
 
-![One account holds containers; each container holds documents that a run turns into memories; the profile sits beside them](/images/figures/three-nouns.svg)
+![One account holds Memories; each Memory holds documents that a run turns into memories; the profile sits beside them](/images/figures/three-nouns.svg)
 
 Plain verbs: `list`, `search`, `get`, `add`, `delete`, `forget`, `ask`.
 [Memory operations](/build/guides/memory-operations/) walks them; the [API reference](/build/reference/api-reference/)
 has every operation.
 
-A **profile** sits beside the containers: the standing facts the assistant keeps about the
-user (`static`) and the most recently changed ones (`dynamic`). `get_profile` reads it;
-`add_memory` with `static=true` writes to it.
+A **profile** sits beside the Memories: standing statements about the user (`pf_…`), each
+with where it came from (`source_kind`). `list_profile_facts` reads it; `add_profile_fact`
+and `forget_profile_fact` keep and forget one, on a key whose level allows it.
+
+A credential reads every Memory it reaches; a write lands in the one text Memory it reaches,
+and a credential that reaches several is refused with `422 write_target_required`.
 
 ## The screens
 
 | Screen | The person uses it to | Your code meets it as |
 |---|---|---|
-| [Home](/use/use-your-assistant/home/) | talk to the assistant, the one agent that is theirs by default; reach it on Telegram | the profile it keeps; the assistant's own memory is not a container |
-| [Memory](/use/manage-your-memory/memory/) | make, run and inspect Memories | `list_containers`, `search_memories`; `learned` turning true after a run. Its learned items have no ids in the API, so code cannot forget one (`forget_memory` takes profile facts) |
+| [Home](/use/use-your-assistant/home/) | talk to the assistant, the one agent that is theirs by default; reach it on Telegram | the profile facts it records (`source_kind: model_generated`); the assistant's own memory is not a Memory here |
+| [Memory](/use/manage-your-memory/memory/) | make, run and inspect Memories | `search_memories`, `list_memories`, `get_memory`, the facts `forget_memory` removes; a document's `learning` turning `succeeded` after a run |
 | [Files](/use/bring-your-material-in/files/) | keep files, and hand folders, uploads, Notion pages and captured conversations to a Memory | `add_document`, `list_documents`, `get_document`, `delete_document` |
-| [Studio](/use/advanced/studio/) | edit a Memory's pipeline canvas | nothing; a canvas run as an endpoint is `workflow_invoke` over MCP |
-| [Agents](/use/advanced/agents/) | build agents beyond the assistant | `ask_agent` on an agent-endpoint credential |
-| [Schedules](/use/automate-and-troubleshoot/schedules/) | run Memories on a cadence | `learned` turning true without a call of yours |
+| [Studio](/use/advanced/studio/) | edit a Memory's pipeline canvas | nothing |
+| [Agents](/use/advanced/agents/) | build agents beyond the assistant | nothing; the memory API reaches Memories, not agents |
+| [Schedules](/use/automate-and-troubleshoot/schedules/) | run Memories on a cadence | a document's `learning` turning `succeeded` without a call of yours |
 | [Activity](/use/automate-and-troubleshoot/activity/) | see what ran | the run a `202` from `add_document` started; a key's own calls are on the key's page |
 | [AI Setup](/use/account-and-models/ai-setup/) | choose the account's model | `422 · capability_unavailable` when there is none |
 | [Connect](/use/manage-your-memory/connect/) | let an AI app read Memories, mint keys | consent tokens and developer keys: [Authentication & Scopes](/build/reference/authentication/) |
-| [Marketplace](/use/share-and-trade/marketplace/) | sell and buy access to a Memory | subscriptions, `ask_agent` |
+| [Marketplace](/use/share-and-trade/marketplace/) | sell and buy access to a Memory | a buyer's credential, `ask_memory` |
 | [Settings](/use/account-and-models/settings/) | plan, export, delete | `422 · capability_unavailable` with `details.reason: "dormant"` on a free plan whose turns are spent |
 
 ## Credentials
@@ -57,11 +61,11 @@ screen is under [Connect](/use/manage-your-memory/connect/#developer-keys) in th
 A key's calls are on the key's page, not on Activity: **Usage** (calls in the last 30 or 7
 days, how many were *refused*, the tool it calls most) and **Recent activity** (each call:
 tool, Memory, what came back, when; a refused call in red with the reason). The same numbers
-are on `GET /v1/api-keys/{id}/usage` with the owner's session.
+are on `GET /v1/keys/{id}/usage` with the owner's session.
 
 ## One account per person
 
-The account is the tenant. A container is a topic, not an end user. A product that serves
+The account is the tenant. A Memory is a topic, not an end user. A product that serves
 many people gives each of them their own Membase account, and reads their memory with their
 own key or their own consent; there are no application-wide keys and no sub-tenant tags.
 [Multi-user isolation](/build/guides/multi-user-isolation/) has the patterns.
@@ -72,22 +76,24 @@ Every learning turn, every search and every assistant answer needs a model. The 
 chooses it under AI Setup: a key of its own for a provider, or a Claude or ChatGPT
 subscription. Follow the connection and verification steps shown in **AI Setup**. An account with no working model keeps
 its stored memory, but learning and hosted search need working agent turns. A search may
-return per-Memory failures in `containers[].error`; documents can remain unread.
+name the Memories that could not answer in `partial`; documents can remain unread.
 [How Membase works](/build/concepts/how-membase-works/#models).
 
 ## Limits and errors
 
-Search can report per-Memory failures in `containers[].error` on an HTTP `200`. Check that
-field before treating an empty result as “nothing found.” [API troubleshooting](/build/reference/troubleshooting/)
+Search and every list name the Memories that could not answer in `partial` on an HTTP
+`200`. Check that field before treating an empty result as “nothing found.” [API troubleshooting](/build/reference/troubleshooting/)
 covers partial failures, deferred learning and timeouts.
 
 | Status | Code | When |
 |---|---|---|
-| 400 | `validation` | an empty `q`, both or neither of `content` and `url`, `container` omitted when more than one is in reach |
+| 400 | `validation` | an empty `q`, both or neither of `content` and `url`, a `limit` out of range |
 | 401 | `unauthenticated` | no bearer token on the request |
-| 403 | `unauthorized` | an invalid, expired or revoked key; outside the credential's reach; or a verb above its level |
-| 404 | `not_found` | an unknown document or memory id |
-| 422 | `validation` | a missing or mistyped body field; read `code` to tell it from the row below |
+| 403 | `unauthorized` | an invalid, expired or revoked key, or a verb above its level |
+| 404 | `not_found` | an id that is not this credential's to read: outside its reach, deleted, or not one of ours |
+| 422 | `validation` | a missing, mistyped or unknown body field (`container` included); read `code` to tell it from the rows below |
+| 422 | `write_target_required` | a write from a credential that reaches several Memories |
+| 428 | `confirmation_required` | a delete or forget without `confirm=true`; nothing changed (a credential that holds no destructive verb gets `403` first) |
 | 422 | `capability_unavailable` | the account's memory cannot run a turn here (no agent container, no model) |
 | 422 | `capability_unavailable` | with `details.reason: "dormant"`: a free-plan account whose free turns are spent |
 | 429 | `rate_limited` | the account's concurrent-turn budget, or the token's per-minute request limit; retry later |
@@ -98,10 +104,12 @@ brings a model of its own under AI Setup or moves to a paid plan.
 
 ## Marketplace
 
-A listing is an agent endpoint (or a workflow endpoint): the buyer's credential calls
-`ask_agent` (or `workflow_invoke`) and gets answers, never files. The earlier snapshot and
-live-memory listing kinds were retired and can no longer be created; a few pre-existing ones
-may still render for their buyers. Check the listing's **Included access** section.
+What is sold is a Memory, as answers (listing kind `memory`). The buyer's credential reaches
+that one Memory and holds only `ask_memory`: answers, never the passages, documents, facts or
+the seller's profile, and never a write. Every call re-checks the purchase and takes one call of
+the period's allowance. A listing sold earlier as an agent endpoint is answered by its Memory
+the same way; the other listing kinds are retired, and existing purchases are served until they
+end. Check the listing's **Included access** section.
 [Marketplace](/use/share-and-trade/marketplace/).
 
 ## Stopping and undoing

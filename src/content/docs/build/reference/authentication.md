@@ -1,9 +1,9 @@
 ---
 title: "Authentication & Scopes"
-description: "Every call carries a bearer. What the two credentials are, what an access level grants, what reach and the profile tick add, and how a key ends."
+description: "Every call carries a bearer. What the credentials are, what an access level grants, what reach and the profile tick add, and how a key ends."
 ---
 
-Every call carries a bearer. What the two credentials are, what an access level grants, what reach and the profile tick add, and how a key ends.
+Every call carries a bearer. What the credentials are, what an access level grants, what reach and the profile tick add, and how a key ends.
 
 Every request to `https://api.app.membase.com` carries one header:
 
@@ -16,7 +16,7 @@ the caller is, which Memories it may touch, and what it may do to them. Both kin
 credential are minted by the account's owner and can be narrowed or revoked by them at any
 time; the change applies on the credential's next call.
 
-## The two credentials
+## The credentials
 
 | | Developer key | Consent token |
 |---|---|---|
@@ -25,7 +25,7 @@ time; the change applies on the credential's next call.
 | Shape | `mbk_<key id>_<token>`, shown once; the key's page keeps a hint such as `mbk_7f3a92d1…c91e` | opaque; the app stores it |
 | Access | **Read**, **Read & write** or **Full access**, chosen at creation; it can be lowered in place, but a Read key cannot be raised to write (create a new key) | read-only, always |
 | Reach | the Memories ticked on the key, or *all, including later ones* | the Memories ticked on consent |
-| Profile | when **Your profile** is ticked | when **Profile access** is ticked at consent; to change it, disconnect and authorize again |
+| Profile | when **Your profile** is ticked: read at Read, keep a statement at Read & write, forget one at Full access | read only, when **Profile access** is ticked at consent; to change it, disconnect and authorize again |
 | Can confirm a removal | yes, with `confirm=true` | never |
 | Expires | never, 30 days, 90 days or a year | at the end of the token's lifetime; there is no refresh, the app authorizes again and the owner re-approves |
 
@@ -34,25 +34,34 @@ holds it, consent through MCP, and your code never sees a token at all. The
 [Connect your AI](/connect/) tab is the consent path; the rest of this page is
 mostly about keys.
 
+A third credential exists but is not minted by the owner: buying a Memory on the Marketplace
+gives the buyer one. It reaches that one Memory and holds only `ask_memory`: answers, never the
+passages, documents, facts or the seller's profile, and never a write. Every call re-checks the
+purchase and takes one call of the period's allowance.
+
 ## Access levels
 
 A level is a set of operations. Each level adds to the one before it.
 
 | Level | Grant | Operations |
 |---|---|---|
-| **Read** | `read` | `list_containers`, `search_memories`, `get_profile` (with the profile tick), `list_documents`, `get_document` (REST only), `memory_rules` |
-| **Read & write** | `suggest` | Read, plus `add_memory`, `add_document` |
-| **Full access** | `manage` | Read & write, plus `delete_document`, `forget_memory`, each only with `confirm=true` |
+| **Read** | `read` | `search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`, `list_media`, `get_media`, `search_media`; `list_profile_facts` with the profile tick |
+| **Read & write** | `suggest` | Read, plus `add_memory`, `add_document`; `add_profile_fact` with the profile tick |
+| **Full access** | `manage` | Read & write, plus `forget_memory`, `delete_document`, `delete_media`, and `forget_profile_fact` with the profile tick, each only with `confirm=true` |
 
-`ask_agent` is on no developer key, at any level: only a credential that exposes an agent
-(a marketplace subscription, a share) holds it; from a key the call is refused with `403`
-like any verb outside its grant. `workflow_invoke` belongs to workflow exposures and is not
-on any key either. The [API reference](/build/reference/api-reference/) lists each level's ceiling from
-the tool table itself, which is why `ask_agent` appears under Read there; a key never
-reaches it.
+`GET /v1/capabilities` names the actions a credential holds (`actions`), the Memories it
+reaches (`memories`) and the standing rules for using them (`rules`). It is not permission:
+every call is still checked when made.
+
+`ask_memory` is on no developer key, at any level: today only a marketplace buyer's credential
+holds it, and from a key the call is refused with `403` like any verb outside its grant. The
+profile tools and `ask_memory` are *explicit*: a credential holds them only when its tool list
+names them, never from its level alone. The [API reference](/build/reference/api-reference/)
+lists each level's ceiling from the tool table itself, which is why `ask_memory` appears under
+Read there; a key never reaches it.
 
 A call above the key's level is refused with `403` and `code: unauthorized`, and the key's
-page counts it as a *refused* call (`ask_agent` excepted: that refusal is not recorded). Lowering
+page counts it as a *refused* call. Lowering
 the level on the key's page applies on the key's next call, with the same token. Raising it
 does not give a **Read** key the right to write: its token was minted read-only, so its
 writes keep failing with `token missing required scope`. To write, create a new key at
@@ -60,39 +69,56 @@ writes keep failing with `token missing required scope`. To write, create a new 
 
 ## Reach
 
-Reach is the list of Memories (containers, in the API) a credential may use. It is switched
+Reach is the list of Memories a credential may use. It is switched
 on the Connect page, on the key's page under **Memory access**, or on a Memory's own page under
 **Use in**; all three are the same switch. A key created with *All memories, including ones
-you make later* reaches every container the account has now or later.
+you make later* reaches every Memory the account has now or later.
 
 ![One grant seen from three places, Uses, Use in and Memory access; on means in reach, off means not listed and refused on the next call](/images/figures/reach-one-switch.svg)
 
-On a key limited to listed Memories, a container outside the reach is refused exactly like
-one that does not exist: `403`, `code: unauthorized`, *may not use that container*. On an
-*All memories* key, an id that is not one of the account's answers `404 · not_found`.
-`list_containers` never lists a container outside the reach, so a client cannot tell
-withheld from absent. With exactly one container in reach the `container`
-field may be omitted on `add_memory`; with more than one it is required.
+No request names a Memory. Searches and lists cover every Memory in reach and leave the
+others out; an id from a Memory outside the reach reads exactly like one that does not exist:
+`404 · not_found`. `GET /v1/capabilities` (over MCP, `get_capabilities`) never names a
+Memory outside the reach, so a client cannot tell withheld from absent.
+
+Writes land in the key's **write target**: the one text Memory it reaches. A key that reaches
+several text Memories is refused on `add_memory` and `add_document` with
+`422 write_target_required`, and nothing is written somewhere by guess. To write, mint the key
+for the Memory its writes should go to.
 
 ## The profile tick
 
-The profile is the standing facts the assistant keeps about the person: `static` (who they
-are, lasting preferences) and `dynamic` (what changed recently). It is not part of any
-container, so reach does not cover it. A credential reads it with `get_profile` only when the
-owner ticked **Your profile** on the key or **Profile access** on consent. Without the
-tick the operation is not offered at all. On a consent connection the tick is set only at
-consent; to change it, the owner disconnects the app and authorizes it again.
+The profile is a list of standing statements about the person (`pf_…`): their name, role,
+lasting preferences. It is the account's, not part of any Memory, so reach does not cover it.
+A credential reaches it only when the owner ticked **Your profile** on the key or **Profile
+access** on consent; without the tick no profile operation is offered at all.
+
+What the tick grants follows the key's level:
+
+| Level | With the profile tick |
+|---|---|
+| **Read** | `list_profile_facts` |
+| **Read & write** | also `add_profile_fact` |
+| **Full access** | also `forget_profile_fact`, with `confirm=true` |
+
+A consent token with the tick holds `list_profile_facts` only. A key minted before the profile
+became a list of facts holds the read only, under its retired name `get_profile`, until the
+owner changes the key. On a consent connection the tick is set only at consent; to change it,
+the owner disconnects the app and authorizes it again.
 
 ## Destructive operations
 
-`delete_document` and `forget_memory` need Full access, and even then they do not run on
-their own: a call without `confirm=true` answers `200` with
+`forget_memory`, `delete_document`, `delete_media` and `forget_profile_fact` need Full access,
+and even then they do not run on their own: a call without `confirm=true` changes nothing and answers
+`428 confirmation_required`, naming the target by its public id:
 
 ```json
-{ "status": "confirmation_required", "verb": "delete_document", "how": "…" }
+{ "error": { "code": "confirmation_required", "message": "Pass confirm=true to forget this memory.",
+             "details": { "id": "mem_…", "verb": "forget_memory", "content": "…", "how": "…" },
+             "retryable": false, "trace_id": "…" } }
 ```
 
-and the `how` sentence is what to relay to the person. Pass `confirm=true` only after they
+The `how` sentence is what to relay to the person. Pass `confirm=true` only after they
 agreed; from a developer key that counts as the owner's confirmation. A consent token is
 never offered these verbs at all and is read-scoped, so from an AI app the call is refused
 with `unauthorized · token missing required scope`, not answered with the sentence. A
@@ -114,10 +140,10 @@ already received or stored by an external client.
 | Answer | Meaning |
 |---|---|
 | `401` | no bearer at all (REST; the MCP endpoint differs, below) |
-| `403 · unauthorized` | an unknown, expired or revoked token; a container outside the reach; a verb above the level. The message says which. |
+| `403 · unauthorized` | an unknown, expired or revoked token, or a verb above the level. The message says which. |
 | `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key or a consent token |
-| `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `get_profile` without the profile tick |
-| `403 · unauthorized · may not use that container` | on a key limited to listed Memories: the container is outside the reach, or does not exist (an *All memories* key gets `404 · not_found` for an id that is not the account's) |
+| `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `list_profile_facts` without the profile tick |
+| `404 · not_found` | an id outside the reach, deleted, of the wrong type or not one of ours: all answer alike |
 
 On the REST endpoints the status is `403` and not `401` for a bad token on purpose: the
 request was authenticated as *some* caller (the key id is in the token) and that caller is
@@ -137,11 +163,11 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 | Call | Does |
 |---|---|
-| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its containers) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
-| `PATCH /v1/api-keys/{id}` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
-| `PATCH /v1/exposures/{id}/views` | change its container list |
-| `GET /v1/api-keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
-| `DELETE /v1/exposures/{id}` | revoke it, at once |
+| `POST /v1/keys/create` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its Memories) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
+| `POST /v1/keys/{id}/update` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
+| `POST /v1/access/{id}/memories/set` | change its Memory list |
+| `GET /v1/keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
+| `POST /v1/access/{id}/revoke` | revoke it, at once |
 
 ## OAuth, for an app that connects over MCP
 
@@ -151,7 +177,7 @@ standard way, so any MCP client that speaks OAuth connects without a Membase-spe
 1. An unauthenticated request answers `401` with a `WWW-Authenticate` pointing at the protected-resource metadata (`/.well-known/oauth-protected-resource/mcp-http`, RFC 9728).
 2. The protected-resource metadata names the authorization server; the authorization-server metadata (`/.well-known/oauth-authorization-server`, RFC 8414) names the registration endpoint (`/oauth/register`). The client registers itself dynamically (RFC 7591) and starts the authorization code flow with PKCE (S256).
 3. The browser opens Membase's consent screen. The owner ticks the Memories the app may use and **Profile access** if it may read their profile, and approves.
-4. The client receives a token good for exactly that. `tools/list` on that token offers `list_containers`, `search_memories` and, when ticked, `get_profile`, nothing that writes. The token is not refreshed (`grant_types_supported` is `authorization_code` only): when its lifetime ends the app authorizes again and the owner re-approves.
+4. The client receives a token good for exactly that. `tools/list` on that token offers `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`: nothing that writes. The token is not refreshed (`grant_types_supported` is `authorization_code` only): when its lifetime ends the app authorizes again and the owner re-approves.
 
 A client that cannot do OAuth sends a developer key in the same `Authorization` header
 instead, and gets the key's level.

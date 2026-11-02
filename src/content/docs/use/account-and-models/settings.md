@@ -1,11 +1,11 @@
 ---
 title: "Settings"
-description: "Manage your account, plan, payments, exports and account-data deletion."
+description: "Manage your account, plan, payments, your profile, exports and account-data deletion."
 ---
 
-Manage your account, plan, payments, exports and account-data deletion.
+Manage your account, plan, payments, your profile, exports and account-data deletion.
 
-Manage your account, plan, transactions and data.
+Manage your account, plan, transactions, profile and data.
 
 ![Settings](/images/shots/settings-page.png)
 
@@ -32,6 +32,17 @@ plans and their terms. Check the confirmation before making a payment or changin
 
 Review payments sent and received, including plan payments and marketplace purchases. Where
 available, open the linked block explorer to inspect an on-chain settlement.
+
+## Your profile
+
+Who you are, as your memory keeps it: standing statements such as your name, your role or a
+lasting preference. Your assistant reads them, and so does every connection you allowed to read
+your profile. Each row says where it came from: *You said*, *Imported* or *From a conversation*.
+
+Type a statement and select **Add** to keep it; adding one that is already there keeps the
+existing one. There is no editing: to correct a statement, add the new one and **Forget** the
+old. **Forget** asks you to confirm; once you do, your assistant and your connections stop
+seeing it at once.
 
 ## Data & export
 

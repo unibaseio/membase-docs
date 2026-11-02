@@ -25,7 +25,7 @@ claude mcp login membase
 
 `--scope user` makes the server available in every project. The browser opens Membase's
 consent screen; tick the Memories Claude Code may use and, if it may read the profile,
-**Profile access**. Then ask *"List my Membase containers."* This connection is
+**Profile access**. Then ask *"Which Membase memories can you use?"* This connection is
 read-only.
 
 ## With a developer key
@@ -53,18 +53,24 @@ keeps the skill for its rules.
 
 ## What it can do
 
+Over MCP, `tools/list` shows only what the credential holds. No tool takes a Memory: reads
+cover every Memory in reach, and a write lands in the one text Memory the key reaches.
+
 | Way in | Tools |
 |---|---|
-| consent | `list_containers`, `search_memories`, `get_profile` when ticked; read-only |
-| a Read key | those, plus `list_documents`, `memory_rules` |
-| a Read & write key | plus `add_memory`, `add_document` |
-| a Full access key | plus `delete_document`, `forget_memory`, each only with `confirm=true` after you agreed |
+| consent | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when **Profile access** was ticked. Read-only |
+| a Read key | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`, `list_media`, `get_media`, `search_media`; `list_profile_facts` with **Your profile** ticked |
+| a Read & write key | plus `add_memory`, `add_document`; `add_profile_fact` with the profile tick |
+| a Full access key | plus `forget_memory`, `delete_document`, `delete_media`; `forget_profile_fact` with the profile tick; each only with `confirm=true` after you agreed |
+
+The skill alone gets the same operations over REST, at the key's level.
 
 ## Which Memories it uses
 
 With consent: the Memories ticked on the consent screen, switchable later under **Uses** on
 Claude Code's page in Connect. With a key: the key's reach, switchable on the key's page or
-under **Use in** on the Memory. An empty container list means nothing is switched on yet.
+under **Use in** on the Memory. An empty `memories` list from `get_capabilities` means
+nothing is switched on yet.
 
 ## Remove it
 
@@ -77,7 +83,7 @@ server.
 | It says | What it means | Do |
 |---|---|---|
 | `claude mcp list` shows membase as *needs authentication* | consent not completed | `claude mcp login membase`, or `/mcp` in a session |
-| *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on Claude Code's page in Connect, or **Use in** on the Memory |
+| *Which memories can you use?* answers none | connected, no Memory switched on | **Uses** on Claude Code's page in Connect, or **Use in** on the Memory |
 | the skill says it has no access | no key, or the key reaches nothing | Skills tab › **Create key**; or switch a Memory on for the key |
 | a write comes back as a tool error, *token missing required scope* | the connection is consent-minted (read-only), or the key is Read | use a Read & write key |
 | the first search takes a minute | the memory was asleep | nothing; the next one is quick |

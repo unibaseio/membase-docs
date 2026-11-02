@@ -17,7 +17,7 @@ empty Memory from a failed search.
 
 | Task | Guide |
 |---|---|
-| Add facts or documents, search, read the profile, forget or delete | [Memory operations](/build/guides/memory-operations/) |
+| Add facts or documents, search, keep profile facts, forget or delete | [Memory operations](/build/guides/memory-operations/) |
 | Serve multiple people | [Multi-user isolation](/build/guides/multi-user-isolation/) |
 | Configure timeouts, retries or SDK methods | [SDKs](/build/reference/sdk-quickstart/) |
 | Set access and reach, rotate or revoke a credential | [Authentication](/build/reference/authentication/) |
@@ -38,8 +38,10 @@ If you want to give an existing AI app your memory without building an integrati
 
 ## Understand the model
 
-In the API, a **container** is one *Memory* in the app, a **document** is raw material it
-reads, and a **memory** is a learned fact or a profile fact. A container is not an end user.
+A **Memory** is a named space of memory in the app; a **memory** (`mem_…`) is a fact it
+learned, a **document** (`doc_…`) is material handed in, **media** (`med_…`) a photo or video.
+No request names a Memory: a credential reads every Memory it reaches and writes to the one it
+reaches. A Memory is a topic, not an end user.
 
 [Platform overview](/build/concepts/platform-overview/) maps these objects to the app.
 [How Membase works](/build/concepts/how-membase-works/) explains learning, retrieval and model requirements.

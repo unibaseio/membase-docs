@@ -41,30 +41,36 @@ no header, so a key never ends up in a public file.
 
 ## What a connected client sees
 
-`tools/list` is filtered per caller.
+The tools are the memory API's operations under their tool names, with the same arguments and
+the same answers as REST ([API reference](/build/reference/api-reference/)). No tool takes a
+Memory: reads cover every Memory the credential reaches, and a write lands in the one text
+Memory it reaches. `tools/list` is filtered per caller and shows only what the credential holds.
 
 | Credential | Tools offered |
 |---|---|
-| consent token | `list_containers`, `search_memories`; `get_profile` when the person ticked it |
-| developer key, Read | those, plus `list_documents`, `memory_rules` |
-| developer key, Read & write | plus `add_memory`, `add_document` |
-| developer key, Full access | plus `delete_document`, `forget_memory` |
-| an agent or workflow exposure | `ask_agent` or `workflow_invoke` |
+| consent token | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when the person ticked **Profile access**. Read-only: it never writes and never confirms |
+| developer key, Read | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`, `list_media`, `get_media`, `search_media`; `list_profile_facts` with **Your profile** ticked |
+| developer key, Read & write | plus `add_memory`, `add_document`; `add_profile_fact` with the profile tick |
+| developer key, Full access | plus `forget_memory`, `delete_document`, `delete_media`; `forget_profile_fact` with the profile tick; each only with `confirm=true` |
+| a marketplace buyer's credential | `get_capabilities` and `ask_memory`, on the one Memory bought: answers, never passages |
 
 A call to a tool outside the caller's list is refused as a tool error (HTTP `200`,
 `isError: true`), not an HTTP status: *token missing required scope* when a read-only
 credential (a consent token or a Read key) calls a writing tool, *tool '…' is not in this
-agent's capability profile* when the tool is above a key's level otherwise. A consent-minted client cannot write,
-delete or forget at all. The REST API answers the same refusals with `403 unauthorized`.
-A Full access key that calls `delete_document` or `forget_memory` without `confirm=true`
-answers `status: confirmation_required` with a `how` sentence for the model to relay. Retired
-tool names (`memory_view_query`, `memory_list`, `memory_recall`, `memory_remember`,
-`memory_ingest`, `memory_list_sources`, `memory_forget`, `agent_invoke`) still answer for
-clients that carry them and are hidden from `tools/list`.
+agent's capability profile* when the tool is above a key's level otherwise. A consent-minted
+client cannot write, delete or forget at all. The REST API answers the same refusals with
+`403 unauthorized`. A Full access key that calls a destructive tool without `confirm=true` gets
+a tool error with `confirmation_required` and a `how` sentence for the model to relay; nothing
+changed. `get_capabilities` names what the connection holds, the Memories it reaches and the
+person's standing rules (`rules`); there is no separate rules tool.
 
-A search is a turn inside the person's container. The first one after a quiet spell can
-take up to a minute; the answer marks in `containers[]` any Memory that could not answer
-yet, and the model should say so rather than answer from nothing.
+The protocol before this one had `list_containers`, `memory_rules`, `get_profile`,
+`ask_agent`, `workflow_invoke`, a `container` argument and the `memory_*` names. None of them
+is offered any more, and a `container` argument is refused like any unknown field.
+
+A search is a turn inside the person's memory. The first one after a quiet spell can take up
+to a minute; the answer names in `partial` any Memory that could not answer yet, and the model
+should say so rather than answer from nothing.
 
 ## Ready-made config files
 

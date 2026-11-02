@@ -26,13 +26,13 @@ Look up the word on screen, or the status in the answer.
 | It says | What it means | Do |
 |---|---|---|
 | the server never authorizes | the URL has a typo or a wrong path (`/mcp`, a bare domain), or the consent tab was closed | paste `https://api.app.membase.com/mcp-http` exactly; run the login again |
-| *List my containers* answers an empty list | connected, no Memory switched on | **Uses** on the client's page, or **Use in** on the Memory |
+| *Which memories can you use?* answers none | connected, no Memory switched on | **Uses** on the client's page, or **Use in** on the Memory |
 | the client cannot connect, or says it needs authentication, with a key in its header | the key is unknown, expired or revoked: the MCP endpoint answers `401 invalid_token` to every request, `initialize` and `tools/list` included, so no tools load | mint a new key and update the client's configuration |
 | a write is refused (a tool error, *token missing required scope*) | the connection is consent-minted (read-only), or the key is Read | mint a Read & write key and use it instead |
 | the model says a Memory "could not answer yet" | the memory was asleep; the first search after a quiet spell wakes it | ask again in a moment |
 | the model answers from nothing about the person | the profile tick is off | an app: **Disconnect…** and authorize again with **Profile access** ticked; a key: **Your profile** on the key's page |
 | the model asks me to confirm a delete | a Full access key called delete or forget without `confirm=true` and got its `how` sentence | decide; only a Full access key can pass `confirm=true` |
-| a retired tool name in the model's call (`memory_recall`…) | the client cached an old list | it still answers; restart the client to refresh `tools/list` |
+| a tool the model names is missing (`list_containers`, `get_profile`, `memory_rules`…) | the client cached the tool list of the protocol before this one | restart the client to refresh `tools/list`; the current names are on [Any MCP client](/connect/clients/membase-mcp/#what-a-connected-client-sees) |
 
 ## In the API answer
 
@@ -42,19 +42,20 @@ Look up the word on screen, or the status in the answer.
 | `401 · unauthorized` on the MCP URL | no bearer: the OAuth discovery challenge, normal before consent | complete the client's login |
 | `401 · invalid_token` on the MCP URL | an unknown, expired or revoked token; the MCP endpoint answers every request this way, `initialize` and `tools/list` included | mint a new key, or authorize the app again; do not retry with this one |
 | `403 · unauthorized` | REST: an unknown or expired token (*invalid token*), a revoked one (*token revoked or unknown*), or a suspended account (*account suspended*) | mint a new key; do not retry with this one |
-| `403 · unauthorized · may not use that container` | the container is outside the reach, or does not exist; over MCP the same text comes back as a tool error | switch it on under **Memory access**; or list containers first |
+| `404 · not_found` | an id outside the key's reach, deleted, or not one of ours; a Memory switched off also drops out of searches and lists | switch the Memory on under **Memory access**; `GET /v1/capabilities` names the Memories in reach |
 | `403 · unauthorized · token missing required scope` | a read-only credential (consent, or a Read key) called a tool that writes; over MCP the same text comes back as a tool error | mint a Read & write key |
 | `403 · unauthorized · not in this agent's capability profile` | the tool is above this credential's grant (a key's level, or a consent connection calling a key-only read tool); over MCP the same text comes back as a tool error | raise the key's level, or mint a higher key; a consent connection needs a developer key for it |
-| `200 · status: confirmation_required` | a Full access key's destructive verb without `confirm=true` | pass `confirm=true` after the person agreed |
-| `400 · validation` | an empty `q`, both `content` and `url`, an ambiguous `container` | fix the request; with several Memories in reach, `container` is required |
-| `422 · validation` | a required field is missing or has the wrong type; `details.fields` names it | fix the request |
-| `404 · not_found` | an unknown document or memory id | list first |
+| `403 · unauthorized` on `ask_memory` | a developer key (keys do not hold it), or a marketplace purchase that is not active or whose calls for the period are used up | search instead; a buyer renews or waits for the next period |
+| `428 · confirmation_required` | a Full access key's destructive verb without `confirm=true`; nothing changed; over MCP the same code comes back as a tool error | pass `confirm=true` after the person agreed |
+| `400 · validation` | an empty `q`, both or neither of `content` and `url`, a `limit` out of range | fix the request |
+| `422 · validation` | a required field is missing or has the wrong type, or a field the API does not know (a `container`, a `model` on ask); `details.fields` names it | fix the request |
+| `422 · write_target_required` | a write from a key that reaches several text Memories; nothing was written | use a key that reaches the one Memory writes should go to |
 | `422 · capability_unavailable · no model` | the account has no working model | [AI Setup](/use/account-and-models/ai-setup/) |
 | `422 · capability_unavailable · no agent containers` | the memory service is unavailable | contact support with the error and trace ID |
 | `422 · reason: dormant` | a free-plan account whose free turns are spent | bring a model, or a paid plan |
 | `429 · rate_limited` | the account's concurrent-turn budget | retry later; the SDK retries twice with backoff |
-| `202` with `document_id: null` | the folder sync had not written the row yet | list the container's documents in a moment |
-| a search takes a minute | the container was asleep | allow time for startup; check for errors if the request times out |
+| `202` with `id: null` | the folder sync had not written the row yet | list the documents in a moment |
+| a search takes a minute | the memory was asleep | allow time for startup; check for errors if the request times out |
 | `405 · method_not_allowed` on the MCP URL | the URL misses the MCP path: a bare domain or `/mcp` is the web app, which answers a browser with the app page and a client's `POST` with `405` | use `https://api.app.membase.com/mcp-http` exactly; a trailing slash is fine |
 | `invalid_target` when the client authorizes | a path below the endpoint, e.g. `/mcp-http/v1`: it answers `401` like the right URL, then the authorization refuses it | use `https://api.app.membase.com/mcp-http` exactly |
 

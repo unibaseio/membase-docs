@@ -1,157 +1,192 @@
 ---
 title: "Memory operations"
-description: "Every verb of the agent protocol end to end: containers, search, the profile, notes, documents, ask, forget and delete, what a run does to them, and what code sees when the app does something."
+description: "Every verb of the agent protocol end to end: Memories, search, facts, profile facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something."
 ---
 
-Every verb of the agent protocol end to end: containers, search, the profile, notes, documents, ask, forget and delete, what a run does to them, and what code sees when the app does something.
+Every verb of the agent protocol end to end: Memories, search, facts, profile facts, documents, media, ask, forget and delete, what a run does to them, and what code sees when the app does something.
 
-The API has three nouns and a handful of verbs. This page walks them in the order a program
+The API has a handful of nouns and verbs. This page walks them in the order a program
 meets them, says what each does inside the user's account, and what code sees when the
 person, a schedule or the app does something on its side. Every snippet is the Python SDK;
 the TypeScript and REST shapes are on the [SDKs](/build/reference/sdk-quickstart/) and the
 [API reference](/build/reference/api-reference/).
 
-| Noun | In the app | What it is |
-|---|---|---|
-| **container** | a *Memory* | one named space of memory, with the agent that keeps it and the material it reads |
-| **memory** | an item on a Memory's page | one fact the container holds, or one fact of the user's profile |
-| **document** | a row under a Memory's sources | one piece of raw material a container read: a file, a note, a page |
+| Noun | In the app | What it is | Id |
+|---|---|---|---|
+| **Memory** | a *Memory* | one named space of memory, with the agent that keeps it and the material it reads; `text` or `media`. Named in answers (`memory_name`), never addressed in a request | — |
+| **memory** | an item on a Memory's page | one fact a Memory learned | `mem_…` |
+| **profile fact** | a line under Settings › Your profile | one standing statement about the person (name, role, a lasting preference); the account's, not a Memory's | `pf_…` |
+| **document** | a row under a Memory's sources | one piece of raw material a Memory read: a file or page (`kind: file`), or a fact as it was said (`kind: note`) | `doc_…` |
+| **media** | a photo or video in a media Memory | one photo or video, with its moments | `med_…` |
 
-![One account holds containers; each container holds documents that a run turns into memories; the profile sits beside them](/images/figures/three-nouns.svg)
+Ids are typed and opaque. An id outside the key's reach, an id of the wrong type and a string
+that is not one of ours all answer `404`. Every list is `{items, has_more, partial}`: the newest
+`limit` (1–1000, default 100), whether more were left out, and the Memories that could not
+answer; there is no paging.
 
-## Containers
+![One account holds Memories; each Memory holds documents that a run turns into memories; the profile sits beside them](/images/figures/three-nouns.svg)
+
+## Memories
 
 ```python
-containers = client.containers.list()["containers"]           # what the key reaches
-decisions = next(c for c in containers if c["name"] == "Project decisions")
+caps = client.capabilities()
+caps["memories"]          # [{"name": "Project decisions", "kind": "text"}, …]: what the key reaches
+caps["actions"]           # ["search", "memories.list", "memories.add", …]: what it may do
 ```
 
-`list_containers` returns each Memory in the credential's reach as `{id, name, description, …}`;
-the `id` is the `container` every other call takes. A Memory outside the reach is not listed
-and cannot be told apart from one that does not exist. For a developer key the list follows
-the order the Memories were granted in. The assistant's own memory is not a container: code
-meets it as the profile.
+No request names a Memory. Reads (search, lists, ids) cover every Memory the key reaches;
+writes land in the key's **write target**, the one text Memory it reaches. A key that reaches
+several text Memories is refused on a write with `422 write_target_required`
+(`WriteTargetRequiredError`) and nothing is written somewhere by guess. Sending a `container`
+is a `422` too: the API refuses fields it does not know. `capabilities()` names the Memories in
+reach by name and kind, never by id; it is not permission, and every call is still checked when
+made. A Memory outside the reach cannot be told apart from one that does not exist. The
+assistant's own memory is not a Memory here: code meets what it knows about the person as
+profile facts.
 
 What a Memory's tile says in the app, and what it means to code:
 
 | Tile word | Meaning | In the API |
 |---|---|---|
-| *Add a source* | reads nothing yet | listed, `list_documents` is empty |
-| *On sale* | listed on the Marketplace | buyers hold agent-endpoint credentials to it |
-| *Subscribed* | bought from someone else | `ask_agent` only; no documents, no writes |
-| no word | yours, reading at least one source | listed; searches answer from what its runs learned |
+| *Add a source* | reads nothing yet | in reach, `list_documents` lists nothing from it |
+| *On sale* | listed on the Marketplace | buyers hold credentials that `ask_memory` it, and nothing else |
+| *Subscribed* | bought from someone else | `ask_memory` only; no passages, no documents, no writes |
+| no word | yours, reading at least one source | in reach; searches answer from what its runs learned |
 
-Renaming a Memory changes `name` and `container_name`; the id never changes. Deleting a
+Renaming a Memory changes the `memory_name` answers carry; ids never change. Deleting a
 Memory is the owner's, in the app, and has no agent-protocol verb.
 
 ## Search
 
 ```python
-hits = client.search("what did we decide about the ledger", container=decisions["id"], limit=5)
-for h in hits["results"]:
-    print(h["container_name"], "·", h["content"])
+hits = client.search("what did we decide about the ledger", limit=5)
+for h in hits["items"]:
+    print(h["memory_name"], "·", h["content"])
 ```
 
-Omit `container` to search every Memory in reach at once; each hit still names its container.
-The answer lists passages most relevant first, and `containers[]` marks any Memory that could
-not answer yet.
+A search covers every Memory in reach at once, and each passage names its Memory
+(`memory_name`). Passages come most relevant first: `type: "memory"` is a learned fact and
+carries its `mem_` id (read it again with `memories.get(id)`), `type: "document"` is a passage
+from a document. `limit` is how many in all (1–50), not per Memory. `partial` names each Memory
+that could not answer (`reason: "error"`) or whose passages all lost to `limit`
+(`reason: "truncated"`); the others still answered. `mode="fast"` is one round of retrieval
+with no model call, for recall before every turn of an agent whose own model judges what it is
+handed; the default `full` is the engine's whole retrieval.
 
 A search is a **turn** inside the account's container, not a query on an index. The first one
 after a quiet spell includes runtime startup; the SDKs default to 90
 seconds per request, which is configurable and is not a latency guarantee. There are no metadata filters, because there is no server-side index to apply
 them to: put what matters in the content. Search is retrieval; `ask` is an answer.
 
-A Memory with no learned content may return no results. An explicitly requested container
-outside the key’s reach is refused with `403` on a key limited to listed Memories, and with
-`404 · not_found` on an *All memories* key when the id is not one of the account's; an
-untargeted search omits it. Check
-`containers[].error` before interpreting an empty result: an unavailable model is a failed
-search, not evidence that no matching memory exists. That field holds only a Memory that
-could not run a turn (no model, dormant, no agent container); any other failure inside one
-Memory fails the whole request. Search is not held to the two-turns-at-once limit, but like
-every call it can answer `429` when the token exceeds its per-minute request limit.
+A Memory with no learned content may return no results. Check `partial` before interpreting
+an empty result: an unavailable model is a failed search, not evidence that no matching memory
+exists. Search is not held to the two-turns-at-once limit, but like every call it can answer
+`429` when the token exceeds its per-minute request limit.
 
-## The profile
+## Facts
 
 ```python
-p = client.profile(q="working hours")
-p["static"], p["dynamic"], p["results"]
+facts = client.memories.list(limit=20)            # the newest facts, newest by when they happened
+for f in facts["items"]:
+    print(f["id"], f["memory_name"], f["content"], f["source_time"])
+client.memories.get("mem_…")                      # one fact, at any age
 ```
 
-The profile sits beside the containers: the standing facts the assistant keeps about the
-person (`static`: who they are, lasting preferences) and the most recently changed ones
-(`dynamic`). `get_profile` reads it, and only on a credential whose owner ticked the profile;
-without the tick the operation is not offered at all. Read it once, near the start of a
-conversation. Code writes to it with `add_memory` and `static=True`.
+`memories.list` shows the facts the Memories in reach learned, newest by when they happened,
+each with its `mem_` id, `memory_name`, `source_time` (when it happened) and `recorded_at`.
+`memories.get` reads one, however old: a search can name one older than any list shows.
+Listing facts stands on the search grant, so any key that may search may list.
+
+## Profile facts
+
+```python
+facts = client.profile_facts.list(limit=50)
+for f in facts["items"]:
+    print(f["id"], f["source_kind"], f["content"])   # "pf_…", "user_stated", "Prefers dark mode."
+
+kept = client.profile_facts.add("Works in Lisbon, UTC+0.")
+kept["id"], kept["created"]                           # "pf_…", True; the same statement again: False
+
+client.profile_facts.forget("pf_…", confirm=True)     # {"id": "pf_…", "status": "forgotten"}
+```
+
+The profile sits beside the Memories: a list of standing statements about the person, newest
+first. Each has its `pf_` id, `content`, `recorded_at` and `source_kind`, which says where it
+came from: `user_stated` (the owner or one of their keys said it), `imported`, or
+`model_generated` (the assistant recorded it in a conversation). The service sets
+`source_kind`; a request cannot.
+
+`profile_facts.list` needs the profile tick on the key. With the tick, what else the key may do
+follows its level: a Read & write key may `add` a statement, a Full access key may also
+`forget` one, with the same confirmation rule as forgetting a memory (`428` without
+`confirm=true`). Without the tick no profile operation is offered at all. Adding a statement
+that is already there keeps the one there (`created: false`). There is no editing: a correction
+is a new statement and the old one forgotten. List the profile once, near the start of a
+conversation.
 
 ## Add a memory
 
 ```python
-client.memories.add("We settled on Postgres for the ledger.", container=decisions["id"])   # a note it reads
-client.memories.add("The user prefers dark mode.", static=True)                            # a standing fact → the profile
+receipt = client.memories.add("We settled on Postgres for the ledger.")
+receipt   # {"id": "doc_…", "kind": "note", "status": "processing", "learning": [{"memory_name": "Project decisions", "status": "processing"}]}
 ```
 
-A note is raw material, and this call attempts to start its learning run asynchronously: it
-answers with `memory_id`, `document_id`, `status: "queued"` and `learning_run`. The
-`memory_id` is the note's document id, not a fact id: to remove the note, pass it to
-`delete_document`, not `forget_memory`. Use the `document_id` and the same polling as a
-document write; acceptance is not completion. A
-standing fact about the person (`static=True`) goes to the profile instead of any Memory,
-and is recorded synchronously: the answer is `{"static": true, "status": "recorded",
-"run_id", "content"}`, with no document and nothing to poll. Over REST `POST /v1/memories`
-answers `202` either way. With exactly one Memory in reach `container` may be omitted; with
-several it is required. Needs a Read & write key.
+One fact, into the key's write target. It is written as a note the Memory reads, and this call
+starts its learning run asynchronously: it answers `202` with the note's receipt, a document of
+kind `note`. Poll `documents.get(receipt["id"])` as for a document write; acceptance is not
+completion. To remove the note, pass its `doc_` id to `delete_document`; `forget_memory` takes
+the `mem_` id of a fact the Memory learned. Needs a Read & write key.
 
 ## Add a document
 
 ```python
-doc = client.add("…the text…", container="mv-…", title="Call with Acme",
-                 custom_id="call-2026-09-24", metadata={"source": "crm"})
-doc["status"]          # "queued"
-doc["document_id"]     # poll documents.get(id)["learned"]
+doc = client.add("…the text…", title="Call with Acme", custom_id="call-2026-09-24")
+doc["status"]          # "pending" or "processing"
+doc["id"]              # "doc_…": poll documents.get(id)["learning"]
 ```
 
-The text (or a public `url` to fetch, one or the other) lands in the Memory's upload folder in
-the account's Files, is connected as a source on the spot, and a learning turn starts on its
-own; the call answers `202`. The same `custom_id` again answers `status: "exists"` with the
-document's id, container and path and starts nothing, so retries are safe.
-`metadata` is kept for your bookkeeping; search does not filter on it. `document_id` can be
-`null` on the `202` when the folder sync had not written the row yet; list the container's
+The text (or a public `url` to fetch, one or the other) lands in the write target's upload folder
+in the account's Files, is connected as a source on the spot, and a learning run starts on its
+own; the call answers `202` with the receipt `{id, kind: "file", status, learning}`. The same
+`custom_id` again names the document already there and starts nothing, so retries are safe.
+`id` can be `null` on the `202` when the folder sync had not written the row yet; list the
 documents a moment later. Uploads are capped at 32 MiB per file, on every plan.
 
 ### What the `202` becomes
 
-When a learning run starts, it appears on the account’s Activity page. After a successful
-run over that material, the document’s `learned` is true and search can retrieve what it
+When a learning run starts, it appears on the account’s Activity page. `learning` on the
+receipt and on `documents.get(id)` names each Memory with its status: `pending` (waiting for
+the next run; the one in flight starts it when it ends), `processing` (a run is reading it now),
+`succeeded` or `failed`. After a successful run over that material, search can retrieve what it
 learned. A `202` alone does not guarantee that a run started: it can be deferred while the
-agent is paused or capacity is unavailable. Inspect `learning_run` and the Memory’s Report. If it ends in *Run failed*,
-the document is still listed and still unread, and the run's report says why; usually the
-account has no working model under AI Setup, or a source needs reauthorization.
+agent is paused or capacity is unavailable. If it ends `failed`, the document is still listed
+and still unread, and the Memory's Report says why; usually the account has no working model
+under AI Setup, or a source needs reauthorization.
 
 ### Documents
 
 ```python
-docs = client.documents.list(container="mv-…")["documents"]     # newest first
+docs = client.documents.list(kind="file")["items"]                # newest first; kind is "file" or "note"
 for d in docs:
     detail = client.documents.get(d["id"])
-    print(d["id"], d.get("title"), "learned" if detail.get("learned") else "unread")
+    print(d["id"], d["memory_name"], d["title"], [e["status"] for e in detail.get("learning") or []])
 
-client.documents.get("srcitem_…")
-client.documents.delete("srcitem_…", confirm=True)                # Full access
+client.documents.delete("doc_…", confirm=True)                    # Full access
 ```
 
 A document is one piece of raw material a Memory has read or will read: a file in a folder
 source, an uploaded file, a Notion page, a conversation the browser extension captured, or
-what `add_document` handed in. `learned` is false until a run has committed it; it is the flag
-to poll after `add_document`. It is computed per source, not per document: true when the
-Memory's last successful run is at or after the source's current version, under the
-Memory's current instruction. So when a new file lands in the same upload folder, every
-document in that folder reads `learned: false` again until the next run, and changing the
-Memory's instruction makes every document in it read `learned: false` until it has run again.
+what `add_document` handed in, or the note `add_memory` wrote. Its `learning` reads
+`succeeded` once a run has committed it; it is the field to poll after a write. It is computed
+per source, not per document: succeeded when the Memory's last successful run is at or after
+the source's current version, under the Memory's current instruction. So when a new file
+lands in the same upload folder, every document in that folder reads `pending` again until
+the next run, and changing the Memory's instruction makes every document in it read `pending`
+until it has run again.
 
 ### Sync and run are two different things
 
-![Material arrives with a 202 and learned false; a run learns it; then learned is true and search finds it](/images/figures/sync-then-learn-api.svg)
+![Material arrives with a 202 and is not learned yet; a run learns it; then its learning succeeds and search finds it](/images/figures/sync-then-learn-api.svg)
 
 A **sync** fetches raw material and stops. It runs no model, reads nothing into memory and
 never changes what a search answers. A **run** (the learning turn) is what reads the unread
@@ -164,45 +199,75 @@ Memory, cannot make this one look up to date.
 Memory’s next run after fixing the cause. A schedule
 matters for material that arrives without a call: a folder the person keeps adding to, a
 Notion selection that changes. When a schedule fires, nothing changes in the API except the
-memory itself: `learned` turns true and the next search answers from what the run learned.
+memory itself: `learning` turns `succeeded` and the next search answers from what the run
+learned.
 There is no agent-protocol verb to create or pause a schedule; it is the owner's, in the app.
+
+## Media
+
+```python
+client.media.list(limit=20)                          # photos and videos, newest first, each with a one-sentence summary
+hits = client.media.search("someone skiing", kind="video")
+for m in hits["items"]:
+    print(m["memory_name"], m["filename"], [(x["t"], x["text"]) for x in m["moments"]])
+client.media.get("med_…")                            # one item with all its moments
+client.media.delete("med_…", confirm=True)           # Full access
+```
+
+A media Memory holds photos and videos, apart from documents and facts: `search` and the fact
+and document lists do not read them. Each item has a `summary`, a `file_url` and a `thumb_url`
+(routes on the API, read with the same bearer; a `Range` header answers `206` with that part).
+`media.get` and `media.search` add its `moments`: a video's shots and spoken lines, each with
+`t`/`end` in seconds, `speaker` and `thumb_url`. Adding media over the API is not offered yet;
+it arrives through the Memory's sources in the app.
 
 ## Ask
 
 ```python
-answer = client.ask("Summarise what the seller learned about Postgres RLS.")
+out = client.ask("Summarise what the seller learned about Postgres RLS.")
+out["answer"]       # one answer, written from the Memories in reach
+out["citations"]    # [{"memory_name": "Postgres notes"}]: the Memory, never the passages
+out["partial"]      # the Memories that could not answer
 ```
 
-`ask_agent` is the other kind of read next to search: an agent's answer from what its Memory
-learned. It answers only on a credential that **exposes** an agent, a marketplace
-subscription or a share the owner made; an ordinary developer key holds no agent, and the
-call is refused with `403 · unauthorized · tool 'agent_invoke' is not in this agent's
-capability profile`. The buyer gets answers, never files. A product that wants to put a model
-over the person's memory uses search and its own model ([Claude API](/build/integrations/claude-api/),
-[OpenAI API](/build/integrations/openai-api/)); a product that wants a Memory's own agent to answer subscribes
-to it.
+`ask` is the other kind of read next to search: the memory engine reads the Memories in reach
+and writes one answer, with no agent, no tools and no session. `citations` name the Memory the
+answer came from, never a passage. A `model` field is refused (`422`), like any field the API
+does not know.
 
-`workflow_invoke` belongs to workflow exposures, a canvas run as an endpoint, and is offered
-only over MCP on a credential that exposes one.
+`ask_memory` is held only when a credential's tool list names it, and today only a marketplace
+buyer's credential does: it reaches the one Memory bought, holds nothing else, and every call
+takes one call of the period's allowance. A developer key does not hold it at any level, and
+the call is refused with `403 · unauthorized`. A product that wants to put a model over the
+person's memory uses search and its own model ([Claude API](/build/integrations/claude-api/),
+[OpenAI API](/build/integrations/openai-api/)).
 
 ## Forget and delete
 
 ```python
-fact = client.profile()["dynamic"][0]                  # a profile fact: {id, content, updated_at}
-client.memories.forget(str(fact["id"]), confirm=True)    # no container: the profile's store
-client.documents.delete("srcitem_…", confirm=True)
+from membase import ConfirmationRequiredError
+
+try:
+    client.memories.forget("mem_…")
+except ConfirmationRequiredError as e:
+    print(e.details)        # {"id": "mem_…", "verb": "forget_memory", "content": "…", "how": "…"}
+
+client.memories.forget("mem_…", confirm=True)     # {"id": "mem_…", "status": "forgotten"}
+client.documents.delete("doc_…", confirm=True)    # {"id": "doc_…", "status": "deleted"}
 ```
 
-`forget_memory` takes the `id` of a profile fact, from `get_profile`'s `dynamic` list, with
-no `container`. A Memory's own learned facts have no ids the API returns: search results
-name their container, not a fact, and there is currently no way to list a container's memory
-ids, so they cannot be forgotten from code. A note added with `add_memory` is a document;
-remove it with `delete_document`.
+`forget_memory` takes the `mem_` id of a learned fact, from `memories.list`, `memories.get` or
+a search hit of `type: "memory"`. A note added with `add_memory` is a document; remove it with
+`delete_document`.
 
-Both need a Full access key, and even then they do not run on a bare call: without
-`confirm=true` the answer is `200` with `status: confirmation_required` and a `how` sentence
-to relay to the person. Pass `confirm=true` only after they agreed; from a developer key that
-counts as the owner's confirmation. A consent-minted client is never offered these verbs at
+Both need a Full access key (as do `media.delete` and `profile_facts.forget`, the latter with
+the profile tick), and even then they do not run on a bare call: without
+`confirm=true` nothing changes and the answer is `428 confirmation_required`
+(`ConfirmationRequiredError`), naming the target by its public id and carrying a `how`
+sentence to relay to the person. Pass `confirm=true` only after they agreed; from a developer
+key that counts as the owner's confirmation. Forgetting a fact leaves the material it was
+learned from; deleting a document withdraws it and what every Memory learned from it (the file
+goes to the Files trash). A consent-minted client is never offered these verbs at
 all: its token is read-only, so from an AI app the call is refused with `403 · unauthorized ·
 token missing required scope`, not answered with the sentence. What is
 forgotten or deleted is gone from the next search; nothing on the platform caches it.
@@ -213,33 +278,35 @@ those are the owner's, in the app.
 ## Rules
 
 ```python
-client.rules()
+client.capabilities()["rules"]
 ```
 
-`memory_rules` returns the user's standing rules for this credential: what the skill tells an
-AI about behaving beneath the ceiling the server enforces.
+`GET /v1/capabilities` carries the standing rules for this credential under `rules`
+(`citation_required`, `retention_notice`, `version`): what the skill tells an AI about behaving
+beneath the ceiling the server enforces. Over MCP the same answer is `get_capabilities`; there
+is no separate rules call.
 
 ## What code sees when the app does something
 
 | The person | Code sees |
 |---|---|
-| selects **Update now**, or a schedule fires | documents' `learned` turns true; the next search answers from the run |
-| switches a Memory off for the key under **Use in** | `403 · may not use that container` on the very next call, same token |
+| selects **Update now**, or a schedule fires | documents' `learning` turns `succeeded`; the next search answers from the run |
+| switches a Memory off for the key under **Use in** | on the very next call, same token, searches and lists leave it out and its ids answer `404`; if the key is left with one text Memory, that one becomes its write target |
 | lowers the key's access | `403 · not in this agent's capability profile` on the verbs above it |
 | revokes the key, or it expires | `403 · unauthorized` on every call; mint another |
 | removes a source | its documents stop being listed; what was learned stays until the Memory is deleted |
-| deletes the Memory | it is no longer listed; searches no longer answer from it |
-| has no working model for its agent | a failed turn, surfaced as `422 · capability_unavailable` or a search entry in `containers[].error`; stored memory remains, documents may wait unread. Read `code` on a `422`: `validation` there is a malformed body, not a model problem |
+| deletes the Memory | its `memory_name` no longer appears; searches no longer answer from it |
+| has no working model for its agent | a failed turn, surfaced as `422 · capability_unavailable` or a search entry in `partial` (`reason: "error"`); stored memory remains, documents may wait unread. Read `code` on a `422`: `validation` there is a request the API cannot take, and `write_target_required` a write with nowhere to land, not a model problem |
 | is on the free plan with its free turns spent | `422 · capability_unavailable` with `details.reason: "dormant"` until they bring a model or move to a paid plan |
-| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits `add_memory` with `static`, `forget_memory` and `ask_agent` (search is not held to it; `add_document` defers its learning instead, with `learning_run` null); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
+| already has two agent turns running, or a token exceeds its per-minute request limit | `429 · rate_limited`. The turn limit hits agent turns (search is not held to it; `add_document` never is, its learning waits as `pending`); the per-minute limit hits any call, search and `add_document` included. No `Retry-After` is sent; the SDK backs off and retries twice |
 
 ## Rules of the road
 
-* **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
-* **Cite the container.** Every hit names `container_name`; say where an answer came from.
+* **Profile once, search per question.** The profile facts are few and standing; search is a turn inside the user's memory.
+* **Cite the Memory.** Every hit names its Memory (`memory_name`); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
-* **Never confirm on your own.** A delete or forget without `confirm=true` answers with a `how` sentence; relay it and stop.
+* **Never confirm on your own.** A delete or forget without `confirm=true` changes nothing and answers `428` with a `how` sentence; relay it and stop.
 * **Treat `403` as withdrawn access.** The owner narrowed or revoked the key; do not retry with it.
-* **Allow for cold starts.** Configure a suitable timeout and inspect per-Memory errors; see [API troubleshooting](/build/reference/troubleshooting/).
-* **Do not store to filter later.** There are no server-side metadata filters; use `custom_id` and `metadata` for your own bookkeeping.
+* **Allow for cold starts.** Configure a suitable timeout and inspect `partial`; see [API troubleshooting](/build/reference/troubleshooting/).
+* **Do not store to filter later.** There are no server-side metadata filters; use `custom_id` for your own bookkeeping.
 * **The token stays out of logs.** Log the key's hint (`mbk_7f3a92d1…`), never the token.

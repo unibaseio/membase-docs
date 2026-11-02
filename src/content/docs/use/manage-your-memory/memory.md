@@ -28,7 +28,8 @@ The Assistant's own memory is always the first tile. The home page lists the Mem
    update is running or when the sources are not ready.
 3. **Settings.** Configure the name, instructions, sources, schedule and sharing in one dialog.
 4. **Delete…** Says first the one irreversible thing (everything the memory learned goes with it),
-   then what depends on it.
+   then what depends on it. A memory on sale is taken off the market with it, and its
+   subscribers lose access at once.
 5. **Add to this memory.** Choose Membase extension, Upload files, Your Files, or Notion where
    available. Sources you added are listed below with a **Remove** per row.
    [Sources](/use/bring-your-material-in/bring-material-in/) explains each option.

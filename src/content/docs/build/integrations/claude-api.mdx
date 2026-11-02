@@ -14,7 +14,7 @@ Everything below assumes `MEMBASE_API_KEY` in the environment, minted at **Read 
 with **Your profile** ticked ([Authentication & Scopes](/build/reference/authentication/)), and your model
 provider's key beside it. The loop is the same in every harness:
 
-![Read the profile once, search per question, answer citing the container, then save what the person supplied, which a later search finds once the Memory's learning run has read it](/images/figures/core-loop.svg)
+![Read the profile once, search per question, answer citing the Memory, then save what the person supplied, which a later search finds once the Memory's learning run has read it](/images/figures/core-loop.svg)
 
 ## Membase as a remote MCP server
 
@@ -45,8 +45,8 @@ response = client.beta.messages.create(
         "authorization_token": os.environ["MEMBASE_API_KEY"],
     }],
     tools=[{"type": "mcp_toolset", "mcp_server_name": "membase"}],
-    system="Read get_profile first. Use search_memories before answering about the user's "
-           "past work or decisions, and cite the container_name of anything you use.",
+    system="Call list_profile_facts first. Use search_memories before answering about the "
+           "user's past work or decisions, and cite the memory_name of anything you use.",
     messages=[{"role": "user", "content": "What did we decide about the ledger, and why?"}],
 )
 
@@ -77,8 +77,8 @@ const response = await client.beta.messages.create({
     authorization_token: process.env.MEMBASE_API_KEY!,
   }],
   tools: [{ type: "mcp_toolset", mcp_server_name: "membase" }],
-  system: "Read get_profile first. Use search_memories before answering about the user's " +
-          "past work or decisions, and cite the container_name of anything you use.",
+  system: "Call list_profile_facts first. Use search_memories before answering about the " +
+          "user's past work or decisions, and cite the memory_name of anything you use.",
   messages: [{ role: "user", content: "What did we decide about the ledger, and why?" }],
 });
 
@@ -91,10 +91,12 @@ for (const block of response.content) if (block.type === "text") console.log(blo
 </Tabs>
 
 
-The tool list Claude sees is the key's: a Read key offers `list_containers`,
-`search_memories`, `list_documents`, `memory_rules` and, with **Your profile** ticked,
-`get_profile` (`get_document` is REST-only and not offered over MCP); a Read & write key adds
-`add_memory` and `add_document`. To keep a conversation read-only, mint a Read key for it.
+The tool list Claude sees is the key's: a Read key offers `get_capabilities`,
+`search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`,
+`list_media`, `get_media`, `search_media` and, with **Your profile** ticked,
+`list_profile_facts`; a Read & write key adds `add_memory`, `add_document` and, with the tick,
+`add_profile_fact`. No tool takes a Memory. To keep a conversation read-only, mint a Read key
+for it.
 
 ## Your own tools over the SDK
 
@@ -123,8 +125,8 @@ def search_memories(q: str) -> str:
     Args:
         q: the question, in natural language.
     """
-    hits = memory.search(q, limit=5)["results"]
-    return "\n".join(f"[{h['container_name']}] {h['content']}" for h in hits) or "nothing found"
+    hits = memory.search(q, limit=5)["items"]
+    return "\n".join(f"[{h['memory_name']}] {h['content']}" for h in hits) or "nothing found"
 
 @beta_tool
 def remember(content: str) -> str:
@@ -136,11 +138,11 @@ def remember(content: str) -> str:
     memory.memories.add(content)
     return "saved"
 
-profile = memory.profile()
+profile = memory.profile_facts.list()["items"]
 runner = claude.beta.messages.tool_runner(
     model="claude-opus-5-5",
     max_tokens=16000,
-    system="Standing facts about the user: " + "; ".join(profile["static"]),
+    system="Standing facts about the user: " + "; ".join(f["content"] for f in profile),
     tools=[search_memories, remember],
     messages=[{"role": "user", "content": "Remind me why we picked Postgres, then note that we'll revisit it in Q1."}],
 )
@@ -168,8 +170,8 @@ const searchMemories = betaZodTool({
   description: "Search the user's memory. Use it before answering anything about their past work, decisions or preferences.",
   inputSchema: z.object({ q: z.string().describe("the question, in natural language") }),
   run: async ({ q }) => {
-    const { results } = await memory.search({ q, limit: 5 });
-    return results.map((h) => `[${h.container_name}] ${h.content}`).join("\n") || "nothing found";
+    const { items } = await memory.search({ q, limit: 5 });
+    return items.map((h) => `[${h.memory_name}] ${h.content}`).join("\n") || "nothing found";
   },
 });
 
@@ -180,11 +182,11 @@ const remember = betaZodTool({
   run: async ({ content }) => { await memory.memories.add({ content }); return "saved"; },
 });
 
-const profile = await memory.profile();
+const { items: profile } = await memory.profileFacts.list();
 const final = await claude.beta.messages.toolRunner({
   model: "claude-opus-5-5",
   max_tokens: 16000,
-  system: "Standing facts about the user: " + profile.static.join("; "),
+  system: "Standing facts about the user: " + profile.map((f) => f.content).join("; "),
   tools: [searchMemories, remember],
   messages: [{ role: "user", content: "Remind me why we picked Postgres, then note that we'll revisit it in Q1." }],
 });
@@ -197,16 +199,18 @@ for (const block of final.content) if (block.type === "text") console.log(block.
 </Tabs>
 
 
-`remember` calls `memories.add` without a container, which works while exactly one Memory is
-in the key's reach; pass `container=` once there are several.
+`remember` calls `memories.add`, which lands in the key's write target: the one text Memory it
+reaches. A key that reaches several is refused with `WriteTargetRequiredError`
+(`422 write_target_required`) and nothing is written, so mint the key for the Memory this
+assistant should write to.
 
 ## Rules that hold in every shape
 
 The same rules, with the reasons, are on [Memory operations](/build/guides/memory-operations/#rules-of-the-road).
 
-* **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
-* **Cite the container.** Every hit names `container_name`; say where an answer came from.
+* **Profile once, search per question.** The profile facts are few and standing; search is a turn inside the user's memory.
+* **Cite the Memory.** Every hit names the Memory it came from (`memory_name`, over REST, MCP and the SDKs alike); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
-* **Never confirm on your own.** A delete or forget without `confirm=true` answers with a `how` sentence; relay it and stop.
+* **Never confirm on your own.** A delete or forget without `confirm=true` changes nothing and answers `428 confirmation_required` with a `how` sentence; relay it and stop.
 * **Treat `403` as withdrawn access.** The owner narrowed or revoked the key; do not retry with it.
 * **Expect the first search to be slow.** Up to a minute after a quiet spell; keep the SDK's timeout.

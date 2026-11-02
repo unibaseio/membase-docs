@@ -21,7 +21,7 @@ consent completed.
 1. Open `grok.com/connectors`.
 2. **New Connector → Custom**.
 3. Enter the server URL, `https://api.app.membase.com/mcp-http`, and complete the authentication: the browser opens Membase's consent screen. Tick the Memories Grok may use and, if it may read the profile, **Profile access**; press **Approve access**.
-4. Grok discovers the tools the server exposes for that consent. Ask *"List my Membase containers."*
+4. Grok discovers the tools the server exposes for that consent. Ask *"Which Membase memories can you use?"*
 
 ## With a developer key
 
@@ -32,11 +32,11 @@ integration rather than a plugin, and it works with a developer key in the serve
 
 ## What it can do
 
-`list_containers`, `search_memories` and, when ticked, `get_profile`. Nothing that writes.
+`get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`. Nothing that writes.
 
 ## Which Memories it uses
 
-An empty container list means no Memory is switched on for this connection. Switch one on
+An empty list of memories means no Memory is switched on for this connection. Switch one on
 under **Uses** on Grok's page in Connect, or under **Use in** on the Memory. Grok's page
 exists under **Other apps** on Connect once the consent completed, whatever Grok's own screen
 says; like every other app's page it has **Uses** and **Disconnect…**, and **Approvals** once
@@ -52,5 +52,5 @@ Connect; the client does not tell the server.
 | It says | What it means | Do |
 |---|---|---|
 | the connector never authorizes | the URL has a typo or misses the path, or the consent tab was closed | paste the URL exactly; add it again |
-| an empty container list | connected, no Memory switched on | **Uses** on Grok's page in Connect |
+| it can use no memories | connected, no Memory switched on | **Uses** on Grok's page in Connect |
 | no **New Connector** on a team plan | connectors are provisioned by the admin | ask the admin to add the URL |

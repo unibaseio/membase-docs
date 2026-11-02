@@ -24,11 +24,11 @@ ChatGPT connects to Membase as a custom MCP server and reads the Memories you sw
 4. Back in ChatGPT, review the tools and metadata it discovered. If the list looks stale later, open the plugin's connection on ChatGPT Plugins, select **Refresh**, and start a new conversation.
 5. Install the plugin, then start a new conversation, type `@` in the prompt box and select Membase.
 
-Then ask *"List my Membase containers."*
+Then ask *"Which Membase memories can you use?"*
 
 ## What it can do
 
-Read. `list_containers`, `search_memories` and, when ticked, `get_profile`. It cannot add,
+Read. `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`. It cannot add,
 delete or forget anything, and cannot see a Memory that is not switched on for it. The
 writing and destructive tools are not in its tool list at all: `tools/list` does not offer
 them, and a call to one comes back as a tool error (*token missing required scope*). ChatGPT
@@ -36,7 +36,7 @@ has no way to send a developer key, so the consent path is the only one.
 
 ## Which Memories it uses
 
-An empty container list means no Memory is switched on for this connection yet. Switch one on
+An empty list of memories means no Memory is switched on for this connection yet. Switch one on
 under **Uses** on ChatGPT's page in Connect, or under **Use in** on the Memory; the two are
 the same switch, and off takes effect on the next question.
 

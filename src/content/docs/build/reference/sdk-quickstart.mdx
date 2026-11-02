@@ -26,7 +26,7 @@ enforced server-side, so the SDK cannot do anything the key cannot.
 pip install unibaseio-membase
 ```
 
-Python 3.10 or newer for the hosted client. One dependency, `httpx`.
+Version 0.4.0 or newer. Python 3.10 or newer for the hosted client. One dependency, `httpx`.
 
 For local mode, `pip install 'unibaseio-membase[local]'` on Python 3.12 or 3.13. It installs the
 `unibaseio-membase-core` engine and runs memory on your machine; the engine calls a model
@@ -76,7 +76,8 @@ endpoint you named.
 npm install @unibaseio/membase
 ```
 
-Node 18 or newer (global `fetch`), Deno or Bun. Zero dependencies; responses are typed.
+Version 0.4.0 or newer. Node 18 or newer (global `fetch`), Deno or Bun. Zero dependencies;
+responses are typed.
 The package is ESM only: from a CommonJS project, use an `.mts` file or set `"type": "module"`.
 
 </TabItem>
@@ -93,10 +94,11 @@ level, the Memories it may reach, whether it may read their profile, and when it
 SDK takes that key and nothing else.
 
 If you have used a memory API where you tag content with a *container tag* per end user and
-one master key reaches them all: that is not this. A Membase **container** is one of the
-person's own Memories (a topic), not a tenant. A product that serves many people gives each of
-them their own Membase account, and reaches their memory with their own key or their own
-consent. See [Multi-user Isolation](/build/guides/multi-user-isolation/).
+one master key reaches them all: that is not this. No request names a Memory. Reads cover
+every Memory the key reaches, and writes land in the key's **write target**: the one text
+Memory it reaches. A Memory is one of the person's own topics, not a tenant, and answers name
+it only for attribution (`memory_name`). A product that serves many people gives each of them
+their own Membase account, and reaches their memory with their own key or their own consent. See [Multi-user Isolation](/build/guides/multi-user-isolation/).
 
 ## Create a client
 
@@ -140,13 +142,17 @@ const local = new Membase({ apiKey: "local", baseUrl: "http://127.0.0.1:8787" })
 | Retry limit | `max_retries` | `maxRetries` | 2 |
 | API origin | `base_url` | `baseUrl` | `MEMBASE_BASE_URL`, else `https://api.app.membase.com` |
 
-Releases before `unibaseio-membase` 0.3.3 and `@unibaseio/membase` 0.3.2 default to
-`https://api.app.membase.ai`, which serves the same API.
+Releases before 0.4.0 speak the API this one replaced (they pass a `container` and read
+`results`); upgrade both packages to 0.4.0 or newer.
 
 A client for an API origin always needs a key: without `api_key` or `MEMBASE_API_KEY` the
 constructor raises (`ValueError` in Python, `Error` in TypeScript), even when a base URL is
 given. To talk to `membase --local serve` from either language, pass any key with
 `http://127.0.0.1:8787`, or the value of `MEMBASE_LOCAL_TOKEN` when the server sets one.
+
+Local memory (`Membase(local=True)` or `membase --local serve`) answers the same routes with the
+same shapes. Its writes land in the store's write target, and a store with several Memories
+needs `MEMBASE_WRITE_TARGET` set to the one writes go to.
 
 Retries cover connection errors, timeouts, 408, 409, 429 and 5xx, with exponential backoff;
 a numeric `Retry-After` is honoured when present (the server sends none today).
@@ -163,22 +169,24 @@ accepted document to become searchable.
 <TabItem label="Python">
 
 ```python
-# add: a document (its text, or a public url) into a Memory. Returns at once, learned in the background.
+# add: a document (its text, or a public url) into the key's write target. Answers 202 at once; learned in the background.
 doc = client.add("Call notes with Acme: they want SSO before the pilot.",
-                 container="mv-…", title="Call with Acme", custom_id="call-2026-09-24")
-doc["status"]                                   # "queued"; the same custom_id again answers "exists" and starts nothing
+                 title="Call with Acme", custom_id="call-2026-09-24")
+doc["id"], doc["status"]                        # "doc_…", "pending" or "processing"; the same custom_id again starts nothing
 
-# search: passages across every Memory in reach, most relevant first, each naming its container
+# search: passages across every Memory in reach, most relevant first, each naming its Memory
 hits = client.search("what does Acme need before the pilot", limit=5)
-for h in hits["results"]:
-    print(h["container_name"], "·", h["content"])
+for h in hits["items"]:
+    print(h["memory_name"], "·", h["content"])
+hits["partial"]                                 # the Memories that could not answer
 
-# profile: who the user is (needs the profile tick on the key)
-p = client.profile(q="working hours")
-p["static"], p["dynamic"], p["results"]
+# profile facts: who the user is (needs the profile tick on the key)
+for f in client.profile_facts.list()["items"]:
+    print(f["source_kind"], "·", f["content"])
 
-# ask: the exposed agent's answer (an agent-endpoint credential, e.g. a marketplace subscription)
-client.ask("Summarise what the seller learned about Postgres RLS.")
+# ask: one answer from the memory (a credential that holds ask_memory: today, a marketplace buyer's)
+out = client.ask("Summarise what the seller learned about Postgres RLS.")
+out["answer"], out["citations"]                 # citations name the Memory, never a passage
 ```
 
 </TabItem>
@@ -188,17 +196,19 @@ client.ask("Summarise what the seller learned about Postgres RLS.")
 <TabItem label="TypeScript">
 
 ```ts
-const doc = await client.add({ container: "mv-…", content: "Call notes with Acme: they want SSO before the pilot.",
+const doc = await client.add({ content: "Call notes with Acme: they want SSO before the pilot.",
                                title: "Call with Acme", customId: "call-2026-09-24" });
-doc.status;                                      // "queued"; "exists" when the customId was seen before
+doc.id; doc.status;                              // "doc_…", "pending" or "processing"
 
 const hits = await client.search({ q: "what does Acme need before the pilot", limit: 5 });
-for (const h of hits.results) console.log(h.container_name, "·", h.content);
+for (const h of hits.items) console.log(h.memory_name, "·", h.content);
+hits.partial;                                    // the Memories that could not answer
 
-const p = await client.profile({ q: "working hours" });
-p.static; p.dynamic; p.results;
+const { items: facts } = await client.profileFacts.list();
+for (const f of facts) console.log(f.source_kind, "·", f.content);
 
-await client.ask({ message: "Summarise what the seller learned about Postgres RLS." });
+const out = await client.ask({ message: "Summarise what the seller learned about Postgres RLS." });
+out.answer; out.citations;                       // citations name the Memory, never a passage
 ```
 
 </TabItem>
@@ -207,12 +217,19 @@ await client.ask({ message: "Summarise what the seller learned about Postgres RL
 </Tabs>
 
 
-`add` hands raw material to the Memory's folder and starts its learning turn; poll
-`documents.get(id)` until `learned` is true if you need to know. `search` is retrieval, not an
-answer; `ask` is the answer. What each verb does inside the account, and what code sees when
-the person does something in the app, is on [Memory operations](/build/guides/memory-operations/).
+`add` hands raw material to the write target's folder and starts its learning; poll
+`documents.get(id)` until every entry of its `learning` reads `succeeded` if you need to know.
+`search` is retrieval, not an answer; `ask` is one answer the memory engine writes, and only a
+credential that holds `ask_memory` may call it (a developer key does not). `search` takes `mode="fast"` for one
+round of retrieval with no model call, for recall before every turn of an agent whose own model
+judges what it is handed. What each verb does inside the account, and what code sees when the
+person does something in the app, is on [Memory operations](/build/guides/memory-operations/).
 
 ## The resources
+
+Every list answers `{items, has_more, partial}`: the newest `limit` (1–1000, default 100),
+whether more were left out, and the Memories that could not answer. Ids are typed and opaque:
+`mem_…` a fact, `pf_…` a profile fact, `doc_…` a document, `med_…` a photo or video.
 
 
 <Tabs syncKey="lang">
@@ -221,18 +238,25 @@ the person does something in the app, is on [Memory operations](/build/guides/me
 <TabItem label="Python">
 
 ```python
-client.containers.list()                        # {"containers": [{id, name, description, …}]}
+client.capabilities()                           # {"actions": ["search", "memories.list", …], "memories": [{name, kind}], "rules": {…}, "features": […]}
 
-client.documents.list(container="mv-…")        # newest first; get(id) supplies "learned"
-client.documents.get("srcitem_…")
-client.documents.delete("srcitem_…", confirm=True)
+client.memories.list(limit=20)                  # the newest facts, each with its mem_ id and memory_name
+client.memories.get("mem_…")
+client.memories.add("We settled on Postgres.")  # a fact; the receipt is the note it was written as (doc_…, kind "note")
+client.memories.forget("mem_…", confirm=True)
 
-client.memories.add("We settled on Postgres.", container="mv-…")   # a note the Memory reads
-client.memories.add("The user prefers dark mode.", static=True)     # a standing fact → the profile
-fact = client.profile()["dynamic"][0]                             # a profile fact: {id, content, updated_at}
-client.memories.forget(str(fact["id"]), confirm=True)               # no container: the profile's store
+client.profile_facts.list(limit=50)             # the profile tick on the key; newest first, each with source_kind
+client.profile_facts.add("Prefers dark mode.")  # Read & write; the fact, and created: false if it was already there
+client.profile_facts.forget("pf_…", confirm=True)   # Full access
 
-client.rules()                                  # the user's standing rules for this credential
+client.documents.list(kind="file")              # newest first; kind is "file" or "note"
+client.documents.get("doc_…")                   # with learning: [{memory_name, status}]
+client.documents.delete("doc_…", confirm=True)
+
+client.media.list()                             # photos and videos in the media Memories in reach
+client.media.search("someone skiing", kind="video")
+client.media.get("med_…")                       # with its moments
+client.media.delete("med_…", confirm=True)
 ```
 
 </TabItem>
@@ -242,18 +266,25 @@ client.rules()                                  # the user's standing rules for 
 <TabItem label="TypeScript">
 
 ```ts
-await client.containers.list();
+await client.capabilities();
 
-await client.documents.list({ container: "mv-…" });
-await client.documents.get("srcitem_…");
-await client.documents.delete("srcitem_…", { confirm: true });
+await client.memories.list({ limit: 20 });
+await client.memories.get("mem_…");
+await client.memories.add({ content: "We settled on Postgres." });
+await client.memories.forget("mem_…", { confirm: true });
 
-await client.memories.add({ content: "We settled on Postgres.", container: "mv-…" });
-await client.memories.add({ content: "The user prefers dark mode.", static: true });
-const { dynamic } = await client.profile();                          // profile facts: {id, content, updated_at}
-await client.memories.forget(String(dynamic[0].id), { confirm: true }); // no container: the profile's store
+await client.profileFacts.list({ limit: 50 });
+await client.profileFacts.add({ content: "Prefers dark mode." });
+await client.profileFacts.forget("pf_…", { confirm: true });
 
-await client.rules();
+await client.documents.list({ kind: "file" });
+await client.documents.get("doc_…");
+await client.documents.delete("doc_…", { confirm: true });
+
+await client.media.list();
+await client.media.search({ q: "someone skiing", kind: "video" });
+await client.media.get("med_…");
+await client.media.delete("med_…", { confirm: true });
 ```
 
 </TabItem>
@@ -261,15 +292,18 @@ await client.rules();
 
 </Tabs>
 
+The standing rules for this credential (`citation_required`, `retention_notice`, `version`)
+are `rules` in `capabilities()`; there is no separate rules call.
 
-`memories.add` answers a `memory_id` that is the note's document id: remove a note with
-`documents.delete`, not `memories.forget`. `memories.forget` takes the `id` of a profile fact
-from `profile()`'s `dynamic` list, with no `container`. A Memory's own learned facts have no
-ids the API returns: there is currently no way to list a container's memory ids, so they
-cannot be forgotten from code.
 
-`delete` and `forget` need a key at **Full access**. Without `confirm` they do not fail: the
-answer is `status: confirmation_required` with a `how` sentence to relay to the person. Pass
+`memories.add` answers the note it was written as (a `doc_…` of kind `note`): remove a note
+with `documents.delete`. `memories.forget` takes the `mem_…` id of a learned fact, from
+`memories.list`, `memories.get` or a search hit of `type: "memory"`; the material it was
+learned from stays.
+
+`delete` and `forget` need a key at **Full access** (`profile_facts.forget` also the profile tick). Without `confirm` nothing changes and the
+call raises `ConfirmationRequiredError` (HTTP `428 confirmation_required`), whose `details`
+name the target (`id`, `verb`, …) and carry a `how` sentence to relay to the person. Pass
 `confirm` only after they agreed; from a developer key that counts as the owner's confirmation.
 
 ## Errors
@@ -279,13 +313,15 @@ One class per HTTP status, all carrying the API's error envelope: `code` (which 
 
 | Status | Class | When |
 |---|---|---|
-| 400 | `BadRequestError` | `code: validation`, from the service's own checks: an empty `q`, both or neither of `content` and `url`, `container` omitted when more than one is in reach |
+| 400 | `BadRequestError` | `code: validation`, from the service's own checks: an empty `q`, both or neither of `content` and `url`, a list `limit` outside 1–1000 |
 | 401 | `AuthenticationError` | no bearer at all |
-| 403 | `PermissionDeniedError` | `code: unauthorized`: an unknown, expired or revoked key; a container outside the key's reach; a verb above its level |
-| 404 | `NotFoundError` | an unknown document or memory id |
+| 403 | `PermissionDeniedError` | `code: unauthorized`: an unknown, expired or revoked key, or a verb above its level |
+| 404 | `NotFoundError` | an id that is not this key's to read: unknown, deleted, outside its reach or of the wrong type all answer alike |
 | 409 | `ConflictError` | a conflicting write; retried automatically, then raised |
-| 422 | `UnprocessableEntityError` | `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Also `code: validation` for a malformed body (a missing or mistyped required field), so read `code`, not only the status |
-| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once, reached by `memories.add(static=True)`, `forget` and `ask`), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. The per-token limiter covers every call, `search` and `add` included; the two-turn cap does not reach them. `add` and `memories.add` also raise it with `code: quota_exceeded` when the account's storage is full or its plan is not active; retrying does not help |
+| 422 | `WriteTargetRequiredError` | `code: write_target_required`: a write from a key that reaches several text Memories and has no write target. Nothing was written; the key's owner decides where its writes go, no request can |
+| 422 | `UnprocessableEntityError` | `code: validation` for a body the API cannot take: an unknown field (a `container`, a `metadata`), a missing or mistyped field, a search `limit` outside 1–50. `code: capability_unavailable`: the account's memory cannot run a turn here (no agent container, no model). Read `code`, not only the status |
+| 428 | `ConfirmationRequiredError` | `code: confirmation_required`: a removal without `confirm`; nothing changed |
+| 429 | `RateLimitError` | the account's concurrent-turn cap (two agent turns at once), the service-wide ceiling on turns running at once (`details.scope: "process"`), or the per-token request limiter (`details.limit_per_min`); no `Retry-After` is sent; retried automatically with backoff, then raised. The per-token limiter covers every call, `search` and `add` included; the two-turn cap does not reach them. `add` and `memories.add` also raise it with `code: quota_exceeded` when the account's storage is full or its plan is not active; retrying does not help |
 | 5xx | `InternalServerError` | retried automatically, then raised |
 | — | `APIConnectionError`, `APITimeoutError` | the request never got an answer |
 
@@ -296,12 +332,17 @@ One class per HTTP status, all carrying the API's error envelope: `code` (which 
 <TabItem label="Python">
 
 ```python
-from membase import PermissionDeniedError, RateLimitError
+from membase import ConfirmationRequiredError, WriteTargetRequiredError
 
 try:
-    client.search("x", container="mv-other")
-except PermissionDeniedError as e:
-    print(e.code, e.message, e.trace_id)       # unauthorized  may not use that container  …
+    client.memories.forget("mem_…")
+except ConfirmationRequiredError as e:
+    print(e.code, e.details["how"], e.trace_id)    # confirmation_required  Pass confirm=true …  …
+
+try:
+    client.memories.add("We settled on Postgres.")
+except WriteTargetRequiredError as e:
+    print(e.message)                             # the key reaches several Memories and has no write target
 ```
 
 </TabItem>
@@ -311,12 +352,18 @@ except PermissionDeniedError as e:
 <TabItem label="TypeScript">
 
 ```ts
-import { PermissionDeniedError } from "@unibaseio/membase";
+import { ConfirmationRequiredError, WriteTargetRequiredError } from "@unibaseio/membase";
 
 try {
-  await client.search({ q: "x", container: "mv-other" });
+  await client.memories.forget("mem_…");
 } catch (e) {
-  if (e instanceof PermissionDeniedError) console.log(e.code, e.message, e.traceId);
+  if (e instanceof ConfirmationRequiredError) console.log(e.code, e.details, e.traceId);
+}
+
+try {
+  await client.memories.add({ content: "We settled on Postgres." });
+} catch (e) {
+  if (e instanceof WriteTargetRequiredError) console.log(e.message);
 }
 ```
 
@@ -328,30 +375,40 @@ try {
 
 ## Rules of the road
 
-* **Reach is account state.** The Memories a key may use are switched on the Connect page. A key narrowed there answers `403` on its very next call, with the same token.
+* **Reach is account state.** The Memories a key may use are switched on the Connect page. A key narrowed there stops reading a Memory on its very next call, with the same token: searches and lists leave it out, and its ids answer `404`.
+* **No request names a Memory.** There is no `container` to pass; sending one is a `422`. Writes go to the key's write target.
 * **Confirm means the person agreed.** Never pass `confirm` on your own initiative.
-* **Writes are raw material.** `add` hands bytes to the Memory's folder; its agent reads them in the next learning turn.
-* **Do not store to filter later.** There are no server-side metadata filters on search; put what matters in the content, and use `custom_id` and `metadata` for your own bookkeeping.
+* **Writes are raw material.** `add` hands bytes to the write target's folder; its agent reads them in the next learning turn.
+* **Do not store to filter later.** There are no server-side metadata filters on search; put what matters in the content, and use `custom_id` for your own bookkeeping.
 * **The token stays out of logs.** Log the key's hint (`mbk_7f3a92d1…`) from the key's page, never the token.
 
 ## Method map
 
 | SDK | REST | Protocol tool | Level |
 |---|---|---|---|
-| `add(...)` | `POST /v1/documents` | `add_document` | Read & write |
-| `search(q, ...)` | `POST /v1/search` | `search_memories` | Read |
-| `profile(q=…)` | `GET /v1/profile` | `get_profile` | Read + profile tick |
-| `ask(message)` | `POST /v1/ask` | `ask_agent` | agent exposure |
-| `rules()` | `GET /v1/rules` | `memory_rules` | Read |
-| `containers.list()` | `GET /v1/containers` | `list_containers` | Read |
-| `documents.list(container=…)` | `GET /v1/documents` | `list_documents` | Read |
-| `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` (REST only, not an MCP tool) | Read |
-| `documents.delete(id, confirm=True)` | `DELETE /v1/documents/{id}` | `delete_document` | Full access |
-| `memories.add(content, container=…, static=…)` | `POST /v1/memories` | `add_memory` | Read & write |
-| `memories.forget(id, confirm=True)` | `DELETE /v1/memories/{id}` | `forget_memory` | Full access |
+| `search(q, limit=, mode=)` | `POST /v1/search` | `search_memories` | Read |
+| `add(...)`, `documents.add(...)` | `POST /v1/documents/add` | `add_document` | Read & write |
+| `ask(message)` | `POST /v1/ask` | `ask_memory` | marketplace buyer only |
+| `capabilities()` | `GET /v1/capabilities` (actions, Memories, `rules`) | `get_capabilities` | any credential |
+| `memories.list(limit=)` | `GET /v1/memories` | `list_memories` | Read |
+| `memories.get(id)` | `GET /v1/memories/{id}` | `get_memory` | Read |
+| `memories.add(content, title=)` | `POST /v1/memories/add` | `add_memory` | Read & write |
+| `memories.forget(id, confirm=True)` | `POST /v1/memories/{id}/forget` | `forget_memory` | Full access |
+| `profile_facts.list(limit=)` | `GET /v1/profile-facts` | `list_profile_facts` | Read + profile tick |
+| `profile_facts.add(content)` | `POST /v1/profile-facts/add` | `add_profile_fact` | Read & write + profile tick |
+| `profile_facts.forget(id, confirm=True)` | `POST /v1/profile-facts/{id}/forget` | `forget_profile_fact` | Full access + profile tick |
+| `documents.list(kind=, limit=)` | `GET /v1/documents` | `list_documents` | Read |
+| `documents.get(id)` | `GET /v1/documents/{id}` | `get_document` | Read |
+| `documents.delete(id, confirm=True)` | `POST /v1/documents/{id}/delete` | `delete_document` | Full access |
+| `media.list(limit=)` | `GET /v1/media` | `list_media` | Read |
+| `media.get(id)` | `GET /v1/media/{id}` | `get_media` | Read |
+| `media.search(q, kind=, limit=)` | `POST /v1/media/search` | `search_media` | Read |
+| `media.delete(id, confirm=True)` | `POST /v1/media/{id}/delete` | `delete_media` | Full access |
 
-The MCP server offers the same operations under the protocol tool names, so a model that
-learned `search_memories` in Claude is calling what your code calls `search`.
+The TypeScript names are the same in camelCase (`profileFacts.list`). The MCP server offers the
+same operations under the protocol tool names, with the same arguments and answers, so a model
+that learned `search_memories` in Claude is calling what your code calls `search`. No tool takes
+a Memory, over MCP or REST.
 
 ## Without the SDK
 

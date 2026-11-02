@@ -24,7 +24,7 @@ agent can take the skill as well.
 Open **Customize** in the sidebar, enable Membase and complete the OAuth prompt: the browser
 opens Membase's consent screen, where you tick the Memories Cursor may use and, if it may read
 the profile, **Profile access**. Check that its tools appear under **Available Tools** in chat,
-then ask *"List my Membase containers"*.
+then ask *"Which Membase memories can you use?"*.
 
 ## With a developer key
 
@@ -47,12 +47,13 @@ MCP tools already present it uses those and keeps the skill for its rules.
 
 ## What it can do
 
-With consent: `list_containers`, `search_memories` and, when ticked, `get_profile`, and
-nothing that writes. With a key: the key's level.
+With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`, and
+nothing that writes. With a key: the key's level; the tools per level are on
+[Any MCP client](/connect/clients/membase-mcp/#what-a-connected-client-sees).
 
 ## Which Memories it uses
 
-An empty container list means no Memory is switched on for this connection. Switch one on
+An empty list of memories means no Memory is switched on for this connection. Switch one on
 under **Uses** on Cursor's page in Connect, or on the key's page, or under **Use in** on the
 Memory.
 
@@ -67,5 +68,5 @@ Delete the entry from `mcp.json`, then **Disconnect…** on Cursor's page in Con
 |---|---|---|
 | the server shows red under MCP | the URL is wrong, or consent was not completed | check the URL is the exact address, path included; retry the prompt; the Output panel's MCP Logs has the error |
 | Membase cannot connect, or asks to authenticate, with a key in `headers` | the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request, so no tools load | mint a new key and update the file |
-| an empty container list | connected, no Memory switched on | **Uses** on Cursor's page in Connect |
+| it can use no memories | connected, no Memory switched on | **Uses** on Cursor's page in Connect |
 | a project file with a key was committed | the token is public | **Revoke…** it now and mint another |

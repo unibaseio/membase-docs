@@ -19,22 +19,22 @@ integration task below.
 The same skill carries the API reference, the SDK guide, the MCP setup and the use cases, so an
 agent that has it can write the integration for you. Install it once, then prompt:
 
-> Add Membase memory to this app. Read the membase skill first. Use the SDK; read the profile
-> once per session when granted, search before answering about past work, and save only what
+> Add Membase memory to this app. Read the membase skill first. Use the SDK; list the profile
+> facts once per session when granted, search before answering about past work, and save only what
 > the user supplied. Wait for learning before searching newly added documents and check
-> `containers[].error`. Never pass `confirm` on your own. Keep the key in the environment.
+> `partial`. Never pass `confirm` on your own. Keep the key in the environment.
 
 What the skill teaches, so you can check the result:
 
 | The agent should | Because |
 |---|---|
-| read `get_profile` once, near the start, when granted | it is small and standing; the memory of who the user is |
-| call `search_memories` before answering about past work, decisions or preferences | search is retrieval inside the user's own container |
-| cite `container_name` | every hit says which Memory it came from |
-| use `add_memory` for a fact, `add_document` for text or a URL, with `custom_id` | documents are raw material until the Memory's run; the same `custom_id` twice is a no-op |
-| pass `confirm=true` only after the person agreed | on a Full access key, a delete or forget without it answers with a `how` sentence, not an action |
+| call `list_profile_facts` once, near the start, when granted | the profile is small and standing: who the user is |
+| call `search_memories` before answering about past work, decisions or preferences | search is retrieval inside the user's own memory |
+| cite `memory_name` | every hit says which Memory it came from, over REST and MCP alike |
+| use `add_memory` for a fact, `add_document` for text or a URL, with `custom_id`, and never send a `container` | writes land in the key's write target; documents are raw material until the Memory's run; the same `custom_id` twice is a no-op |
+| pass `confirm=true` only after the person agreed | on a Full access key, a delete or forget without it changes nothing and answers with a `how` sentence (`428 confirmation_required` over REST), not an action |
 | treat `403` as withdrawn access and stop | the owner narrowed or revoked the key on Connect |
-| use a suitable timeout and inspect `containers[].error` | a cold runtime or failed search must not be reported as an empty Memory |
+| use a suitable timeout and inspect `partial` | a cold runtime or failed search must not be reported as an empty Memory |
 
 The skill is served at `https://app.membase.com/skill` (its `SKILL.md` with the install
 preamble) and as a zip at `https://app.membase.com/plugin/membase-skill.zip`. Its files are
@@ -56,6 +56,7 @@ curl -s https://app.membase.com/plugin/openapi/agent-protocol.json -o agent-prot
 npx openapi-typescript agent-protocol.json -o membase.d.ts
 ```
 
-Three requests cover most integrations: `GET /v1/profile`, `POST /v1/search` with `{"q": …}`
-and `POST /v1/memories` with `{"content": …}`, each with the bearer header.
+Three requests cover most integrations: `GET /v1/profile-facts`, `POST /v1/search` with `{"q": …}`
+and `POST /v1/memories/add` with `{"content": …}`, each with the bearer header. No request names a
+Memory; a write lands in the key's write target.
 [API reference](/build/reference/api-reference/) has every operation.

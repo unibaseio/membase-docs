@@ -206,19 +206,54 @@ def tick(label: str):
 def mint_screenshot_key(page, ctx):
     """Track only the temporary key created for this screenshot, for exact cleanup."""
     with page.expect_response(
-        lambda r: r.request.method == "POST" and r.url.endswith("/v1/api-keys")
+        lambda r: r.request.method == "POST" and r.url.endswith("/v1/keys/create")
     ) as response:
         page.get_by_test_id("developer-key-create").click()
     minted = response.value.json()
     ctx["screenshot_key_id"] = minted["binding_id"]
+    ctx["screenshot_token"] = minted["token"]
     page.get_by_test_id("developer-key-done").wait_for(state="visible")
+
+
+_MASK_TOKEN_JS = """([token, masked]) => {
+  const root = document.querySelector("[data-testid='developer-key-dialog']") || document.body;
+  const all = [root, ...root.querySelectorAll("*")];
+  const deepest = all.filter(
+    (el) => el.textContent.includes(token) && ![...el.children].some((c) => c.textContent.includes(token))
+  );
+  for (const el of deepest) el.textContent = el.textContent.split(token).join(masked);
+  for (const el of document.querySelectorAll("input, textarea")) {
+    if (el.value.includes(token)) el.value = el.value.split(token).join(masked);
+  }
+  const left = document.body.innerText.includes(token) ||
+    [...document.querySelectorAll("input, textarea")].some((el) => el.value.includes(token));
+  return left;
+}"""
+
+
+def mask_screenshot_token(page, ctx):
+    """Show the token the way a reader may see it: its public prefix (`mbk_<id>_`, the part the
+    key's hint shows anyway), the secret dotted out — everywhere on the screen it appears, the
+    snippets included. Runs after the real test call, which reads the token from the app's
+    state, not from the screen. Refuses to go on if any copy of the token is still visible."""
+    token = ctx.get("screenshot_token") or ""
+    if not token:
+        return
+    prefix = "_".join(token.split("_")[:2]) + "_"
+    if page.evaluate(_MASK_TOKEN_JS, [token, prefix + "\u2022" * 28]):
+        raise SystemExit("developer-key-token: the token is still on screen after masking")
+    ctx.pop("screenshot_token")
 
 
 def revoke_screenshot_key(page, ctx):
     """A published example must never contain a usable developer key."""
     key_id = ctx.get("screenshot_key_id")
     if key_id:
-        _json(ctx["base"] + "/v1/exposures/" + urllib.parse.quote(key_id, safe=""), method="DELETE")
+        _json(
+            ctx["base"] + "/v1/access/" + urllib.parse.quote(key_id, safe="") + "/revoke",
+            {},
+            method="POST",
+        )
         ctx.pop("screenshot_key_id")
 
 
@@ -325,7 +360,7 @@ def seed(page, ctx):
             and c.get("connection_id") in (pick.get("source_ids") or [])
         ]
         ctx["source_id"] = srcs[0]["connection_id"] if srcs else None
-        subs = _json(base + "/v1/memory-listing-subscriptions")
+        subs = _json(base + "/v1/market/subscriptions")
         ctx["listing_id"] = (subs or [{}])[0].get("listing_id") if subs else None
         convs = _json(base + "/v1/conversations")
         rows = convs.get("conversations") if isinstance(convs, dict) else convs
@@ -630,6 +665,7 @@ SHOTS: list[Shot] = [
                 "[data-testid='developer-key-test']:has-text('Verified')",
                 600,
             ),
+            mask_screenshot_token,
             revoke_screenshot_key,
         ],
         clip="[data-testid='developer-key-dialog'] > div",

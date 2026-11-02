@@ -9,7 +9,7 @@ Everything below assumes `MEMBASE_API_KEY` in the environment, minted at **Read 
 with **Your profile** ticked ([Authentication & Scopes](/build/reference/authentication/)), and your model
 provider's key beside it. The loop is the same in every harness:
 
-![Read the profile once, search per question, answer citing the container, then save what the person supplied, which a later search finds once the Memory's learning run has read it](/images/figures/core-loop.svg)
+![Read the profile once, search per question, answer citing the Memory, then save what the person supplied, which a later search finds once the Memory's learning run has read it](/images/figures/core-loop.svg)
 
 ## The tool-calling loop
 
@@ -37,16 +37,16 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 
 async function runTool(name: string, args: Record<string, string>): Promise<string> {
   if (name === "search_memories") {
-    const { results } = await memory.search({ q: args.q, limit: 5 });
-    return JSON.stringify(results.map((h) => ({ memory: h.container_name, content: h.content })));
+    const { items } = await memory.search({ q: args.q, limit: 5 });
+    return JSON.stringify(items.map((h) => ({ memory: h.memory_name, content: h.content })));
   }
   await memory.memories.add({ content: args.content });
   return "saved";
 }
 
-const profile = await memory.profile();
+const { items: profile } = await memory.profileFacts.list();
 const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-  { role: "system", content: "Standing facts about the user: " + profile.static.join("; ") },
+  { role: "system", content: "Standing facts about the user: " + profile.map((f) => f.content).join("; ") },
   { role: "user", content: "What did we decide about the ledger?" },
 ];
 
@@ -64,15 +64,17 @@ for (;;) {
 ```
 
 The same loop in Python is the SDK's `client.search(...)` and `client.memories.add(...)`
-behind two function definitions; nothing else changes.
+behind two function definitions; nothing else changes. `add_memory` lands in the key's write
+target, so mint the key for the one Memory it should write to: a key that reaches several is
+refused with `422 write_target_required`.
 
 
 ## Rules that hold in every shape
 
-* **Profile once, search per question.** The profile is small and standing; search is a turn inside the user's container.
-* **Cite the container.** Every hit names `container_name`; say where an answer came from.
+* **Profile once, search per question.** The profile facts are few and standing; search is a turn inside the user's memory.
+* **Cite the Memory.** Every hit names the Memory it came from (`memory_name`); say where an answer came from.
 * **Save what the user supplied,** in their words, and only when they asked or plainly meant to.
-* **Never confirm on your own.** A delete or forget without `confirm=true` answers with a `how` sentence; relay it and stop.
+* **Never confirm on your own.** A delete or forget without `confirm=true` changes nothing and answers `428 confirmation_required` with a `how` sentence; relay it and stop.
 * **Treat `403` as withdrawn access.** The owner narrowed or revoked the key; do not retry with it.
 * **Expect the first search to be slow.** Up to a minute after a quiet spell; keep the SDK's timeout.
 

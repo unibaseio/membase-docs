@@ -27,15 +27,16 @@ connection can use and revoke access when it is no longer needed.
 **Agents.** Additional agents you configure for specific tasks. Use Studio to build their
 workflows and Agents to manage their settings and runs.
 
-**Marketplace.** Browse skills and memory listings. A memory listing provides access to an
-agent that answers from the seller's Memory; check its **Included access** before purchasing.
+**Marketplace.** Browse skills and memory listings. A memory listing sells a Memory as
+answers: a buyer asks it and gets answers, never its documents or files. Check its
+**Included access** before purchasing.
 
 ## What runs when
 
 Adding or syncing a source makes material available to a Memory. Select **Update now** to
 process it, or configure a schedule. Check the run's **Report** to see whether it completed.
 A document added through the API with `add_document` starts learning on its own; poll the
-document until `learned` is true.
+document until its `learning` status reads `succeeded`.
 
 ## Stopping and undoing
 
