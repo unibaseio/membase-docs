@@ -145,13 +145,13 @@ def main() -> int:
     # 1. Files: folders and files.
     for folder in ["/lumen", "/lumen/decisions", "/lumen/notes", "/reading"]:
         try:
-            call("POST", "/v1/space/folders", json={"path": folder})
+            call("POST", "/v1/files/folders/create", json={"path": folder})
         except requests.HTTPError:
             pass  # already there
     for path, text in FILES.items():
         folder, name = path.rsplit("/", 1)
         r = s.post(
-            base + "/v1/space/uploads",
+            base + "/v1/uploads/create",
             files={"file": (name, io.BytesIO(text.encode()), "text/markdown")},
             data={"path": folder},
             timeout=120,
@@ -181,7 +181,7 @@ def main() -> int:
     # 3. Each folder becomes a source, attached to its memory (a union, as the UI does it).
     #    A source left over from an earlier attempt that points at a folder that does not exist
     #    is disconnected first — its learning run can only fail.
-    present = {o["path"] for o in call("GET", "/v1/space/list", params={"path": "/"})["objects"]}
+    present = {o["path"] for o in call("GET", "/v1/files", params={"path": "/"})["objects"]}
     for c in call("GET", "/v1/connections"):
         label = (c.get("label") or "").replace("/docs", "", 1) or "/"
         # Exact match on purpose: a source made as "/Lumen" points the agent at a folder that is
@@ -197,8 +197,8 @@ def main() -> int:
                 fresh = call("GET", f"/v1/memory-views/{v['id']}")
                 if c["connection_id"] in (fresh.get("source_ids") or []):
                     call(
-                        "PATCH",
-                        f"/v1/memory-views/{v['id']}",
+                        "POST",
+                        f"/v1/memory-views/{v['id']}/update",
                         json={
                             "source_ids": [
                                 i for i in fresh["source_ids"] if i != c["connection_id"]
@@ -217,7 +217,7 @@ def main() -> int:
                 return c["connection_id"]
         r = call(
             "POST",
-            "/v1/imports",
+            "/v1/sources/import",
             json={"connector": "space-folder", "config": {"path": path}, "mode": "keep_synced"},
         )
         return r["connection_id"]
@@ -227,7 +227,7 @@ def main() -> int:
     for v, sid in [(lumen, src_lumen), (reading, src_reading)]:
         fresh = call("GET", f"/v1/memory-views/{v['id']}")
         ids = list({*(fresh.get("source_ids") or []), sid})
-        call("PATCH", f"/v1/memory-views/{v['id']}", json={"source_ids": ids})
+        call("POST", f"/v1/memory-views/{v['id']}/update", json={"source_ids": ids})
     for _ in range(60):
         conns = {c["connection_id"]: c for c in call("GET", "/v1/connections")}
         st = [conns[i].get("status") for i in (src_lumen, src_reading)]
@@ -240,17 +240,15 @@ def main() -> int:
     #     done some work (a few real calls, one of them refused, so the key page's usage and
     #     activity are populated) and one that expires. Keys the capture run itself made
     #     ("docs shot") are revoked here so they do not pile up.
-    keys = [
-        e for e in call("GET", "/v1/exposures")["exposures"] if e.get("subject_kind") == "apikey"
-    ]
+    keys = [e for e in call("GET", "/v1/access")["exposures"] if e.get("subject_kind") == "apikey"]
     live = {e["name"]: e for e in keys if e.get("status") not in ("revoked", "disconnected")}
     for e in keys:
         if e["name"] == "docs shot" and e.get("status") not in ("revoked",):
-            call("DELETE", f"/v1/exposures/{e['id']}")
+            call("POST", f"/v1/access/{e['id']}/revoke")
     if "nightly-notes script" not in live:
         k = call(
             "POST",
-            "/v1/api-keys",
+            "/v1/keys/create",
             json={
                 "name": "nightly-notes script",
                 "profile": "suggest",
@@ -278,7 +276,7 @@ def main() -> int:
     if "ci — docs indexer" not in live:
         k = call(
             "POST",
-            "/v1/api-keys",
+            "/v1/keys/create",
             json={
                 "name": "ci — docs indexer",
                 "profile": "read",
@@ -297,14 +295,15 @@ def main() -> int:
     def run(
         agent_id: str, instruction: str = "", conversation_id: str | None = None, timeout: int = 900
     ) -> dict:
-        body: dict = {"instruction": instruction, "wait": False}
+        given: dict = {"instruction": instruction}
         if conversation_id:
-            body["conversation_id"] = conversation_id
-        r = call("POST", f"/v1/agent-definitions/{agent_id}/run", json=body, timeout=120)
+            given["conversation_id"] = conversation_id
+        body = {"ref": {"kind": "agent", "id": agent_id}, "input": given, "wait": False}
+        r = call("POST", "/v1/runs/start", json=body, timeout=120)["record"]
         t0 = time.time()
         while r["status"] in ("running", "pending", "queued") and time.time() - t0 < timeout:
             time.sleep(5)
-            r = call("GET", f"/v1/agent-runs/{r['id']}")
+            r = call("GET", f"/v1/runs/{r['id']}")["record"]
         log(
             "run",
             agent_id,
@@ -335,7 +334,7 @@ def main() -> int:
     assistant = call("GET", "/v1/assistant")
     wanted = [lumen["id"], reading["id"]]
     if sorted(assistant.get("memory_view_ids") or []) != sorted(wanted):
-        call("PATCH", f"/v1/agent-definitions/{assistant['id']}", json={"memory_view_ids": wanted})
+        call("POST", f"/v1/agents/{assistant['id']}/update", json={"memory_view_ids": wanted})
         log("assistant now consults", wanted)
     titles = {
         "Lumen app: how do I categorise transactions?": "In my Lumen app (the personal-finance side project), what did I decide about how transactions get categorised, and why? Keep it short.",
@@ -348,10 +347,10 @@ def main() -> int:
         ):
             log("forgetting stale conversation", c["id"])
             call(
-                "DELETE", f"/v1/conversations/{c['id']}", params={"confirm": "forget"}, timeout=180
+                "POST", f"/v1/conversations/{c['id']}/delete", params={"confirm": "forget"}, timeout=180
             )
     for title, question in titles.items():
-        conv = call("POST", "/v1/conversations", json={"title": title})
+        conv = call("POST", "/v1/conversations/create", json={"title": title})
         r = run(assistant["id"], question, conv["id"])
         # The web surface files both lines of a turn on the conversation itself (the agent keeps
         # its own session; the transcript the page shows is these rows), so do the same here.

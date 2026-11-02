@@ -163,11 +163,11 @@ screen for the same operations is [Connect › Developer keys](/use/manage-your-
 
 | Call | Does |
 |---|---|
-| `POST /v1/api-keys` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its Memories) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
-| `PATCH /v1/api-keys/{id}` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
-| `PATCH /v1/exposures/{id}/views` | change its Memory list |
-| `GET /v1/api-keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
-| `DELETE /v1/exposures/{id}` | revoke it, at once |
+| `POST /v1/keys/create` | mint a key: `name`, `profile` (`read`, `suggest` or `manage` for Read, Read & write, Full access), `view_ids` (its Memories) or `all_views: true`, `profile_access`, `expires_in_days` (1–3650; omit for never), `replaces` (the key it rotates out) |
+| `POST /v1/keys/{id}/update` | change `name`, `profile`, `profile_access` or `all_views`; the next call reads the new grant, except that raising a **Read** key's `profile` does not let it write (create a new key) |
+| `POST /v1/access/{id}/memories/set` | change its Memory list |
+| `GET /v1/keys/{id}/usage` | calls per day, refusals, per tool, the last twenty |
+| `POST /v1/access/{id}/revoke` | revoke it, at once |
 
 ## OAuth, for an app that connects over MCP
 

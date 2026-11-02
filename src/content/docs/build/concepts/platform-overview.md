@@ -61,7 +61,7 @@ screen is under [Connect](/use/manage-your-memory/connect/#developer-keys) in th
 A key's calls are on the key's page, not on Activity: **Usage** (calls in the last 30 or 7
 days, how many were *refused*, the tool it calls most) and **Recent activity** (each call:
 tool, Memory, what came back, when; a refused call in red with the reason). The same numbers
-are on `GET /v1/api-keys/{id}/usage` with the owner's session.
+are on `GET /v1/keys/{id}/usage` with the owner's session.
 
 ## One account per person
 

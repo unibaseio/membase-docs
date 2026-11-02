@@ -206,7 +206,7 @@ def tick(label: str):
 def mint_screenshot_key(page, ctx):
     """Track only the temporary key created for this screenshot, for exact cleanup."""
     with page.expect_response(
-        lambda r: r.request.method == "POST" and r.url.endswith("/v1/api-keys")
+        lambda r: r.request.method == "POST" and r.url.endswith("/v1/keys/create")
     ) as response:
         page.get_by_test_id("developer-key-create").click()
     minted = response.value.json()
@@ -249,7 +249,11 @@ def revoke_screenshot_key(page, ctx):
     """A published example must never contain a usable developer key."""
     key_id = ctx.get("screenshot_key_id")
     if key_id:
-        _json(ctx["base"] + "/v1/exposures/" + urllib.parse.quote(key_id, safe=""), method="DELETE")
+        _json(
+            ctx["base"] + "/v1/access/" + urllib.parse.quote(key_id, safe="") + "/revoke",
+            {},
+            method="POST",
+        )
         ctx.pop("screenshot_key_id")
 
 
@@ -356,7 +360,7 @@ def seed(page, ctx):
             and c.get("connection_id") in (pick.get("source_ids") or [])
         ]
         ctx["source_id"] = srcs[0]["connection_id"] if srcs else None
-        subs = _json(base + "/v1/memory-listing-subscriptions")
+        subs = _json(base + "/v1/market/subscriptions")
         ctx["listing_id"] = (subs or [{}])[0].get("listing_id") if subs else None
         convs = _json(base + "/v1/conversations")
         rows = convs.get("conversations") if isinstance(convs, dict) else convs
