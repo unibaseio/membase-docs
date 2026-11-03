@@ -14,7 +14,11 @@ AI, and the page has a tab for each.
    commands. Each tab holds everything its way needs.
 2. **The address** (MCP tab). Copy it into the app's connector or MCP settings; the app opens
    your browser and you approve it on the consent card, ticking the memories it may read. An
-   app connected this way can only read.
+   app connected this way can only read. The card says who is asking and where approving
+   sends you: a known app by its name, a program on your own computer as such. An app that
+   uses a known product's name from another address is shown as *Unverified app*, with a red
+   warning naming that address; an app Membase cannot confirm gets a warning too. Approve only
+   a connection you started yourself.
 3. **The client catalog, by purpose.** *Chat assistants* and *Coding tools*. A tile you have not set up says
    *Set up* and unfolds that app's steps; a connected tile (brand-blue border) says *Authorized · awaiting first use* or
    *Authorized · used …* and opens the app's page; *Approval expired · authorize again* means
