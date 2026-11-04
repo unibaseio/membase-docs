@@ -256,6 +256,7 @@ client.documents.delete("doc_…", confirm=True)
 client.media.list()                             # photos and videos in the media Memories in reach
 client.media.search("someone skiing", kind="video")
 client.media.get("med_…")                       # with its moments
+client.media.file("med_…", range="bytes=0-1023")  # its bytes (MediaFile: content, content_type, status)
 client.media.delete("med_…", confirm=True)
 ```
 
@@ -284,6 +285,7 @@ await client.documents.delete("doc_…", { confirm: true });
 await client.media.list();
 await client.media.search({ q: "someone skiing", kind: "video" });
 await client.media.get("med_…");
+await client.media.file("med_…", { range: "bytes=0-1023" }); // { content, contentType, status }
 await client.media.delete("med_…", { confirm: true });
 ```
 
@@ -402,6 +404,7 @@ try {
 | `documents.delete(id, confirm=True)` | `POST /v1/documents/{id}/delete` | `delete_document` | Full access |
 | `media.list(limit=)` | `GET /v1/media` | `list_media` | Read |
 | `media.get(id)` | `GET /v1/media/{id}` | `get_media` | Read |
+| `media.file(id, thumb=, range=)` | `GET /v1/media/{id}/file`, `…/thumbs/{name}` | — (REST only) | Read |
 | `media.search(q, kind=, limit=)` | `POST /v1/media/search` | `search_media` | Read |
 | `media.delete(id, confirm=True)` | `POST /v1/media/{id}/delete` | `delete_media` | Full access |
 
