@@ -48,15 +48,15 @@ Memory it reaches. `tools/list` is filtered per caller and shows only what the c
 
 | Credential | Tools offered |
 |---|---|
-| consent token | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when the person ticked **Profile access**. Read-only: it never writes and never confirms |
+| consent token | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when the person ticked **Profile access**; `add_memory` when they ticked **Let it save memories** (off by default). Never a delete, a forget or a confirmation, at any tick |
 | developer key, Read | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`, `list_media`, `get_media`, `search_media`; `list_profile_facts` with **Your profile** ticked |
 | developer key, Read & write | plus `add_memory`, `add_document`; `add_profile_fact` with the profile tick |
 | developer key, Full access | plus `forget_memory`, `delete_document`, `delete_media`; `forget_profile_fact` with the profile tick; each only with `confirm=true` |
 | a marketplace buyer's credential | `get_capabilities` and `ask_memory`, on the one Memory bought: answers, never passages |
 
 A call to a tool outside the caller's list is refused as a tool error (HTTP `200`,
-`isError: true`), not an HTTP status: *token missing required scope* when a read-only
-credential (a consent token or a Read key) calls a writing tool, *tool '…' is not in this
+`isError: true`), not an HTTP status: *token missing required scope* when a credential
+without that grant (a consent token with no write tick, or a Read key) calls a writing tool, *tool '…' is not in this
 agent's capability profile* when the tool is above a key's level otherwise. A consent-minted
 client cannot write, delete or forget at all. The REST API answers the same refusals with
 `403 unauthorized`. A Full access key that calls a destructive tool without `confirm=true` gets

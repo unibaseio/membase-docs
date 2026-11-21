@@ -33,8 +33,8 @@ the key, remove the connector and add it again.
 
 ## What it can do
 
-With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`. Nothing
-that writes: the saving, deleting and forgetting tools are not in its tool list, and a call to
+With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`. Plus `add_memory` when **Let it save memories** was ticked (off by default). The
+deleting and forgetting tools are never in its tool list, and a call to
 one comes back as a tool error (*token missing required scope*). With a key in **Request
 headers**: the key's level. Profile access is decided on the consent screen only; to change
 it, **Disconnect…** on Claude's page in Connect and add the connector again (with a key,

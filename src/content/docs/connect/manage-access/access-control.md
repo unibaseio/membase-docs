@@ -14,14 +14,17 @@ call; nothing here depends on the client behaving.
 
 | | Consent (an app connected over MCP) | Developer key (the skill, a header, code) |
 |---|---|---|
-| Ceiling | read-only, always | the key's level: Read, Read & write, Full access |
+| Ceiling | read, and saving a memory when **Let it save memories** was ticked. Never a delete or a forget | the key's level: Read, Read & write, Full access |
 | Reach | the Memories ticked on consent, switchable later | the Memories ticked on the key, or all including later ones |
 | Profile | read, when **Profile access** was ticked on the consent screen | when **Your profile** was ticked: read, and at higher levels keep or forget a statement |
-| Confirmation | is not offered a delete or forget at all | can, with `confirm=true` at Full access |
+| Confirmation | is not offered a delete or forget at all, at any tick | can, with `confirm=true` at Full access |
 | Ends | **Disconnect…** on the app's page, per credential under **Approvals**, or expiry after 90 days (the tile then says *Approval expired · authorize again*) | **Revoke…**, or expiry |
 
-An app that needs to write does not get a wider consent; the person mints a key for it
-instead, and the key says how wide.
+An app that only needs to save memories can be let to on the consent screen: **Let it save
+memories** is off by default, and ticking it adds `add_memory` and nothing else. Anything
+further — adding documents, deleting, forgetting, the profile writes — still means minting a
+key, and the key says how wide. A connection approved before the tick existed does not gain
+it: what a credential may call is fixed when it is issued.
 
 ## Reach
 
@@ -41,7 +44,8 @@ it on.
 
 `tools/list` is filtered per caller. A consent-minted client is offered `get_capabilities`,
 `search_memories`, `list_memories`, `get_memory`, the media reads and, when ticked,
-`list_profile_facts`, and nothing that writes; a key is offered the tools of its level; a
+`list_profile_facts` and `add_memory` — and nothing else that writes; a key is offered the
+tools of its level; a
 marketplace buyer's credential is offered `get_capabilities` and `ask_memory` alone. A model
 cannot call what it was not offered, and a call that bypasses the list is refused anyway: over
 MCP as a tool error (*token missing required scope*, or *not in this agent's capability

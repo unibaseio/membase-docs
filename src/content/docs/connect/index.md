@@ -1,9 +1,9 @@
 ---
 title: "Connect your AI"
-description: "Choose MCP for read-only access through consent, or a skill with a developer key for an AI that needs to write. Then follow your client\u2019s setup guide."
+description: "Connect over MCP with consent — reading, and saving memories if you tick it — or with a developer key for anything wider. Then follow your client\u2019s setup guide."
 ---
 
-Choose MCP for read-only access through consent, or a skill with a developer key for an AI that needs to write. Then follow your client’s setup guide.
+Connect over MCP with consent — reading, and saving memories if you tick it — or with a developer key for anything wider. Then follow your client’s setup guide.
 
 Connect an AI you already use to your Membase memory. You need a Memory with material it
 has learned; start with the [app quickstart](/use/getting-started/quickstart/)
@@ -14,11 +14,11 @@ fact in your Memory to verify the result.
 
 ## Two ways in
 
-![An AI app connects over MCP and gets read-only access through the consent screen; an AI that runs commands, or your code, uses a developer key at the key's level; both are changed on Connect](/images/figures/two-ways-in.svg)
+![An AI app connects over MCP through the consent screen, reading and, if ticked, saving; an AI that runs commands, or your code, uses a developer key at the key's level; both are changed on Connect](/images/figures/two-ways-in.svg)
 
 | | For | How it authenticates | What it gets |
 |---|---|---|---|
-| **MCP with consent** | an AI app the person uses: Claude, ChatGPT, Cursor, Codex, Grok, Kimi, VS Code, Windsurf… | the app discovers OAuth, the browser opens Membase's consent screen, the person ticks the Memories the app may use and whether it may read their profile | search and the read tools (`search_memories`, `list_memories`, `get_memory`, the media reads) and, when ticked, `list_profile_facts`. Read-only by design. |
+| **MCP with consent** | an AI app the person uses: Claude, ChatGPT, Cursor, Codex, Grok, Kimi, VS Code, Windsurf… | the app discovers OAuth, the browser opens Membase's consent screen, the person ticks the Memories the app may use, whether it may read their profile, and whether it may save memories | search and the read tools (`search_memories`, `list_memories`, `get_memory`, the media reads) and, when ticked, `list_profile_facts` and `add_memory`. Never a delete or a forget. |
 | **Skill with a developer key** | an AI that reads pages and runs commands: Claude Code, Codex, Cursor's agent, Kimi Code | a developer key the person minted | the key's access level, up to Full access |
 
 The account owner can change or revoke either connection from the

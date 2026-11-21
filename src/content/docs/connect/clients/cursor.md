@@ -47,8 +47,8 @@ MCP tools already present it uses those and keeps the skill for its rules.
 
 ## What it can do
 
-With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`, and
-nothing that writes. With a key: the key's level; the tools per level are on
+With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts` and
+`add_memory` — never a delete or a forget. With a key: the key's level; the tools per level are on
 [Any MCP client](/connect/clients/membase-mcp/#what-a-connected-client-sees).
 
 ## Which Memories it uses

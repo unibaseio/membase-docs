@@ -32,7 +32,8 @@ integration rather than a plugin, and it works with a developer key in the serve
 
 ## What it can do
 
-`get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`. Nothing that writes.
+`get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`, plus `add_memory` when **Let it save memories**
+was ticked (off by default). Never a delete or a forget.
 
 ## Which Memories it uses
 

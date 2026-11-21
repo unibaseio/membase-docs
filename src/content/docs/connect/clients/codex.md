@@ -56,8 +56,8 @@ skill for its rules.
 
 ## What it can do
 
-With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`; nothing
-that writes. With a key: the key's level, up to Full access; the tools per level are on
+With consent: `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`, plus `add_memory` when **Let it save
+memories** was ticked; never a delete or a forget. With a key: the key's level, up to Full access; the tools per level are on
 [Any MCP client](/connect/clients/membase-mcp/#what-a-connected-client-sees).
 
 ## Which Memories it uses
@@ -81,6 +81,6 @@ the key.
 |---|---|---|
 | `codex mcp list` shows the server without authorization | consent not completed | `codex mcp login membase` |
 | it can use no memories | connected, no Memory switched on | **Uses** on Codex's page in Connect |
-| a write is refused | the connection is consent-minted (read-only), or the key is Read | give Codex a Read & write key through `bearer_token_env_var` or the skill |
+| a write is refused | the connection was approved without **Let it save memories**, or the key is Read | give Codex a Read & write key through `bearer_token_env_var` or the skill |
 | Membase fails to connect with `bearer_token_env_var` | `MEMBASE_API_KEY` is not set where Codex starts, or the key is unknown, expired or revoked: the server answers `401 invalid_token` to every request | export the variable; or mint a new key and update it |
 | the extension does not see the server | it was added before the extension restarted | *Restart extension*, then *Authenticate* |

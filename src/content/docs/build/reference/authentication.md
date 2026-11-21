@@ -23,10 +23,10 @@ time; the change applies on the credential's next call.
 | Minted by | the owner, under **Connect › Developer keys** | the owner, approving an app on the OAuth consent screen |
 | Held by | code the owner runs: a script, a server, an SDK, an AI running the skill | an AI app: Claude, ChatGPT, Cursor, Codex, Grok, Kimi… |
 | Shape | `mbk_<key id>_<token>`, shown once; the key's page keeps a hint such as `mbk_7f3a92d1…c91e` | opaque; the app stores it |
-| Access | **Read**, **Read & write** or **Full access**, chosen at creation; it can be lowered in place, but a Read key cannot be raised to write (create a new key) | read-only, always |
+| Access | **Read**, **Read & write** or **Full access**, chosen at creation; it can be lowered in place, but a Read key cannot be raised to write (create a new key) | read, plus saving a memory when **Let it save memories** was ticked at consent (off by default). Never a delete or a forget |
 | Reach | the Memories ticked on the key, or *all, including later ones* | the Memories ticked on consent |
 | Profile | when **Your profile** is ticked: read at Read, keep a statement at Read & write, forget one at Full access | read only, when **Profile access** is ticked at consent; to change it, disconnect and authorize again |
-| Can confirm a removal | yes, with `confirm=true` | never |
+| Can confirm a removal | yes, with `confirm=true` | never, at any tick |
 | Expires | never, 30 days, 90 days or a year | at the end of the token's lifetime; there is no refresh, the app authorizes again and the owner re-approves |
 
 Which one you need: if your code holds the credential, a developer key. If the user's AI app
@@ -120,7 +120,7 @@ and even then they do not run on their own: a call without `confirm=true` change
 
 The `how` sentence is what to relay to the person. Pass `confirm=true` only after they
 agreed; from a developer key that counts as the owner's confirmation. A consent token is
-never offered these verbs at all and is read-scoped, so from an AI app the call is refused
+never offered these verbs at all, whatever was ticked, so from an AI app the call is refused
 with `unauthorized · token missing required scope`, not answered with the sentence. A
 **Read & write** key gets `403 · unauthorized · tool 'delete_document' is not in this agent's
 capability profile`.
@@ -141,7 +141,7 @@ already received or stored by an external client.
 |---|---|
 | `401` | no bearer at all (REST; the MCP endpoint differs, below) |
 | `403 · unauthorized` | an unknown, expired or revoked token, or a verb above the level. The message says which. |
-| `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key or a consent token |
+| `403 · unauthorized · token missing required scope` | a write verb (`add_memory`, `add_document`, `delete_document`, `forget_memory`) from a **Read** key, or one the consent token was not granted — `add_memory` needs **Let it save memories**, and the rest are never offered to a consent token |
 | `403 · unauthorized · not in this agent's capability profile` | a verb the token may call but the level does not grant: `delete_document` or `forget_memory` from a **Read & write** key, `list_profile_facts` without the profile tick |
 | `404 · not_found` | an id outside the reach, deleted, of the wrong type or not one of ours: all answer alike |
 
@@ -176,8 +176,8 @@ standard way, so any MCP client that speaks OAuth connects without a Membase-spe
 
 1. An unauthenticated request answers `401` with a `WWW-Authenticate` pointing at the protected-resource metadata (`/.well-known/oauth-protected-resource/mcp-http`, RFC 9728).
 2. The protected-resource metadata names the authorization server; the authorization-server metadata (`/.well-known/oauth-authorization-server`, RFC 8414) names the registration endpoint (`/oauth/register`). The client registers itself dynamically (RFC 7591) and starts the authorization code flow with PKCE (S256).
-3. The browser opens Membase's consent screen. The owner ticks the Memories the app may use and **Profile access** if it may read their profile, and approves.
-4. The client receives a token good for exactly that. `tools/list` on that token offers `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts`: nothing that writes. The token is not refreshed (`grant_types_supported` is `authorization_code` only): when its lifetime ends the app authorizes again and the owner re-approves.
+3. The browser opens Membase's consent screen. The owner ticks the Memories the app may use, **Profile access** if it may read their profile, and **Let it save memories** if it may add to them (off by default), and approves.
+4. The client receives a token good for exactly that. `tools/list` on that token offers `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media` and, when ticked, `list_profile_facts` and `add_memory`: never a delete or a forget. The token is not refreshed (`grant_types_supported` is `authorization_code` only): when its lifetime ends the app authorizes again and the owner re-approves.
 
 A client that cannot do OAuth sends a developer key in the same `Authorization` header
 instead, and gets the key's level.

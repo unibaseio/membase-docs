@@ -25,8 +25,8 @@ claude mcp login membase
 
 `--scope user` makes the server available in every project. The browser opens Membase's
 consent screen; tick the Memories Claude Code may use and, if it may read the profile,
-**Profile access**. Then ask *"Which Membase memories can you use?"* This connection is
-read-only.
+**Profile access** — and **Let it save memories** if it may add to them, which is off by
+default and grants `add_memory` alone. Then ask *"Which Membase memories can you use?"*
 
 ## With a developer key
 
@@ -58,7 +58,7 @@ cover every Memory in reach, and a write lands in the one text Memory the key re
 
 | Way in | Tools |
 |---|---|
-| consent | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when **Profile access** was ticked. Read-only |
+| consent | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_media`, `get_media`, `search_media`; `list_profile_facts` when **Profile access** was ticked; `add_memory` when **Let it save memories** was. Never a delete or a forget |
 | a Read key | `get_capabilities`, `search_memories`, `list_memories`, `get_memory`, `list_documents`, `get_document`, `list_media`, `get_media`, `search_media`; `list_profile_facts` with **Your profile** ticked |
 | a Read & write key | plus `add_memory`, `add_document`; `add_profile_fact` with the profile tick |
 | a Full access key | plus `forget_memory`, `delete_document`, `delete_media`; `forget_profile_fact` with the profile tick; each only with `confirm=true` after you agreed |
@@ -85,6 +85,6 @@ server.
 | `claude mcp list` shows membase as *needs authentication* | consent not completed | `claude mcp login membase`, or `/mcp` in a session |
 | *Which memories can you use?* answers none | connected, no Memory switched on | **Uses** on Claude Code's page in Connect, or **Use in** on the Memory |
 | the skill says it has no access | no key, or the key reaches nothing | Skills tab › **Create key**; or switch a Memory on for the key |
-| a write comes back as a tool error, *token missing required scope* | the connection is consent-minted (read-only), or the key is Read | use a Read & write key |
+| a write comes back as a tool error, *token missing required scope* | the connection was approved without **Let it save memories**, or the key is Read | use a Read & write key |
 | the first search takes a minute | the memory was asleep | nothing; the next one is quick |
 | the model asks me to confirm a delete | a Full access key called delete or forget without `confirm=true` and got its `how` sentence | decide; only a Full access key can pass `confirm=true` |
